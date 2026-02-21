@@ -74,7 +74,7 @@ local rules =
 	}
 }
 
-local emptySpace = { type = " ", character = " " }
+local emptySpace = { type = false, character = false }
 local function inBounds(x,y) return (x > 0) and (x < 10) and (y > 0) and (y < 11) end
 
 function newPiece(board,color,type,i,j)
@@ -91,11 +91,11 @@ function newPiece(board,color,type,i,j)
 	p.size			= 20
 	p.row			= i
 	p.column		= j
-	p.xy			= board:getCoordinates(i,j)
+	p.x, p.y		= board:getCoordinates(i,j)
 
-	function p:draw(x,y)
-		local x = x or self.xy[1]
-		local y = y or self.xy[2]
+	function p:draw()
+		local x = self.x
+		local y = self.y
 		
 		love.graphics.setColor(self.bodyColors)
 		love.graphics.circle("fill",x,y,self.size)
@@ -113,9 +113,9 @@ function newPiece(board,color,type,i,j)
 			self:update()
 		end
 	end
-
-	function p:update() self.xy = board:getCoordinates(self.row, self.column) end
+	
+	function p:update() self.x, self.y = board:getCoordinates(self.row, self.column) end
 	function p:position() return self.row, self.column end
-		
+	
 	return p
 end

@@ -7,10 +7,9 @@ local board
 
 local font
 local font_size = 24
-local i,j = 1, 1
-local active = 1
 local fg_stars = Starfield(2000)
-local mouse_pressed = false
+local mouse_pressed, mouse_x, mouse_y = false, 0, 0
+local clicked_piece = false
 
 local function drawDebugLayout()
 	for i = 1,10,1 do
@@ -46,7 +45,7 @@ function love.update(dt)
 	timer = timer + dt
 	board.theta = 0.01 * math.sin(timer)
 	board.x = 100+math.cos(timer)
-	board:update(dt)
+	--board:update(dt)
 	fg_stars:update(dt)
 end
 
@@ -63,30 +62,31 @@ function love.keypressed(key)
 		board:resize(board.scale+0.01)
 	elseif key == 'r' then
 		board:resize(board.scale-0.01)
-	elseif key == 'x' then
-		active = active + 1
-		if active > 32 then active = 32 end
-		i,j = board.pieces[active].row, board.pieces[active].column
-		return
-	elseif key == 'c' then
-		active = active - 1
-		if active < 1 then active = 1 end
-		i,j = board.pieces[active].row, board.pieces[active].column
-		return
 	end
-	board.pieces[active]:move(i,j)
-
 end
 
 function love.mousepressed(x, y, button)
-	mouse_pressed = true
-	--board.pieces[active]:move(x,y)
+	mouse_pressed, mouse_x, mouse_y = true, x, y
+	local i, j = board:nearestPosition(mouse_x, mouse_y)
+	if board.layout[i][j].type then
+		clicked_piece = board.layout[i][j]
+		clicked_piece.x, clicked_piece.y = board:getCoordinates(i, j)
+	end
 end
 
 function love.mousemoved(x, y, dx, dy)
-	--if mouse_pressed then board.pieces[active]:move(x,y) end
+	if mouse_pressed and clicked_piece then
+		mouse_x, mouse_y = x, y
+		local i, j = board:nearestPosition(mouse_x, mouse_y)
+		clicked_piece.x, clicked_piece.y = board:getCoordinates(i, j)
+	end
 end
 
-function love.mousereleased(x, y, button) end
+function love.mousereleased(x, y, button)
 	mouse_pressed = false
+	if clicked_piece then
+		local i, j = board:nearestPosition(mouse_x, mouse_y)
+		clicked_piece:move(i,j)
+		clicked_piece = false
+	end
 end

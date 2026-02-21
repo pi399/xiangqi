@@ -1,6 +1,13 @@
 require("piece")
 
-local emptySpace = { type = " ", character = " " }
+local emptySpace = { type = false, character = false }
+local function round(x,y)
+	if x < 1 then x = 1
+	elseif x > 9 then x = 9 end
+	if y < 1 then y = 1
+	elseif y > 10 then y = 10 end
+	return x,y
+end
 
 function Board()
 	
@@ -117,9 +124,15 @@ function Board()
 	
 	function b:getCoordinates(i,j)
 		
-		return {self.b + self.x + (i - 1) * self.sqDim,
-				self.b + self.y + (j - 1) * self.sqDim}
+		return	self.b + self.x + (i - 1) * self.sqDim,
+				self.b + self.y + (j - 1) * self.sqDim
 	
+	end
+	
+	function b:nearestPosition(x, y)
+		local i = math.floor((x - self.x) / self.sqDim) + 1
+		local j = math.floor((y - self.y) / self.sqDim) + 1
+		return round(i,j)
 	end
 	--load pieces according to layout into tables
 	b.layout = {}
