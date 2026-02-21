@@ -80,13 +80,13 @@ end
 
 function love.mousepressed(x, y, button)
 	mouse_pressed = true
-	board.pieces[active]:move(x,y)
+	--board.pieces[active]:move(x,y)
 end
 
 function love.mousemoved(x, y, dx, dy)
-	if mouse_pressed then board.pieces[active]:move(x,y) end
+	--if mouse_pressed then board.pieces[active]:move(x,y) end
 end
 
 function love.mousereleased(x, y, button) end
-	
+	mouse_pressed = false
 end
