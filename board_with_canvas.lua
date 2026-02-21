@@ -115,8 +115,12 @@ function Board()
 	end
 	
 	function b:update(dt)
-		for i,piece in ipairs(self.layout) do
-        	if piece.type then piece:update() end
+		for j,row in ipairs(self.layout) do
+        	for i,piece in ipairs(row) do
+        		if piece.type then
+        			piece:update()
+        		end
+        	end
         end
 	end
 	

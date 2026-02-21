@@ -2,7 +2,7 @@ local characters =
 {
 	R = {
 		K = "帥",
-		R = "車",
+		R = "俥",
 		H = "馬",
     	C = "炮",
 	   	P = "兵",
