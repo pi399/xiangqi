@@ -8,7 +8,8 @@ local board
 local font
 local font_size = 24
 local fg_stars = Starfield(2000)
-local mouse_pressed, mouse_x, mouse_y = false, 0, 0
+local mouse_pressed = false
+local dx, dy, damping, pr_x, pr_y = 0, 0, .7, 0, 0
 local clicked_piece = false
 
 local function drawDebugLayout()
@@ -46,6 +47,14 @@ function love.update(dt)
 	board.x = 100+math.cos(timer)
 	--board:update(dt)
 	fg_stars:update(dt)
+	
+	if mouse_pressed and clicked_piece then
+		local x, y = love.mouse.getPosition()
+		local x_vector, y_vector = (pr_x - x), (pr_y - y)
+		dx, dy = (dx + x_vector) * damping, (dy + y_vector) * damping
+		clicked_piece.x, clicked_piece.y = x + dx, y + dy
+		pr_x, pr_y = x, y
+	end
 end
 
 function love.keypressed(key)
@@ -65,8 +74,8 @@ function love.keypressed(key)
 end
 
 function love.mousepressed(x, y, button)
-	mouse_pressed, mouse_x, mouse_y = true, x, y
-	local i, j = board:nearestPosition(mouse_x, mouse_y)
+	mouse_pressed, pr_x, pr_y = true, x, y
+	local i, j = board:nearestPosition(x, y)
 	if board.layout[i][j].type then
 		clicked_piece = board.layout[i][j]
 		clicked_piece.x, clicked_piece.y = board:getCoordinates(i, j)
@@ -74,16 +83,13 @@ function love.mousepressed(x, y, button)
 end
 
 function love.mousemoved(x, y, dx, dy)
-	if mouse_pressed and clicked_piece then
-		mouse_x, mouse_y = x, y
-		clicked_piece.x, clicked_piece.y = mouse_x, mouse_y
-	end
+	
 end
 
 function love.mousereleased(x, y, button)
 	mouse_pressed = false
 	if clicked_piece then
-		local i, j = board:nearestPosition(mouse_x, mouse_y)
+		local i, j = board:nearestPosition(x, y)
 		clicked_piece:move(i,j)
 		clicked_piece = false
 	end
