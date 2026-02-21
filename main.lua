@@ -29,8 +29,6 @@ function love.load()
 	font:setFilter("nearest", "nearest", 0)
 
 	board = Board()
-	i,j = board.pieces[1]:position()
-	
 	love.graphics.setPointSize(2)
 end
 

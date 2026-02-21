@@ -110,6 +110,7 @@ function newPiece(board,color,type,i,j)
 			self.row = i
 			self.column = j
 			self.board.layout[i][j] = self
+			table.insert(self.board.drawIndices, {self.row, self.column})
 			self:update()
 		end
 	end
