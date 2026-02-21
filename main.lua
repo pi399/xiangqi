@@ -34,6 +34,7 @@ end
 
 function love.draw()
 	fg_stars:draw()
+	love.graphics.setColor(0.9,0.9,1)
 	love.graphics.print(love.timer.getFPS(), 10, 10)
 	board:draw()
 end
@@ -75,8 +76,7 @@ end
 function love.mousemoved(x, y, dx, dy)
 	if mouse_pressed and clicked_piece then
 		mouse_x, mouse_y = x, y
-		local i, j = board:nearestPosition(mouse_x, mouse_y)
-		clicked_piece.x, clicked_piece.y = board:getCoordinates(i, j)
+		clicked_piece.x, clicked_piece.y = mouse_x, mouse_y
 	end
 end
 

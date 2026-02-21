@@ -103,16 +103,20 @@ function Board()
 		love.graphics.draw(self.canvas,self.x,self.y,0,self.scale,self.scale)
 		
 		--draw pieces
-		for k,v in ipairs(self.drawIndices) do
-        	if self.layout[v[1]][v[2]].type then self.layout[v[1]][v[2]]:draw() end
+		for j,row in ipairs(self.layout) do
+        	for i,piece in ipairs(row) do
+        		if piece.type then
+        			piece:draw()
+        		end
+        	end
         end
         
         love.graphics.pop()
 	end
 	
 	function b:update(dt)
-		for i,piece in ipairs(self.pieces) do
-        	piece:update()
+		for i,piece in ipairs(self.layout) do
+        	if piece.type then piece:update() end
         end
 	end
 	
@@ -134,9 +138,9 @@ function Board()
 		local j = math.floor((y - self.y) / self.sqDim) + 1
 		return round(i,j)
 	end
-	--load pieces according to layout into tables
+	
+	--load pieces according to layout into table
 	b.layout = {}
-	b.drawIndices = {}
 	
 	for j = 1, 10, 1 do
 		b.layout[j] = {}
@@ -148,7 +152,6 @@ function Board()
 	for j,i in pairs(starting_layout) do
     	for k,v in pairs(i) do
     		b.layout[k][j] = newPiece(b, starting_layout[j][k][1], starting_layout[j][k][2], k, j)
-    		table.insert(b.drawIndices, {b.layout[k][j].row, b.layout[k][j].column})
 		end
     end
 	
