@@ -11,33 +11,30 @@ local stars = Starfield(2000)
 
 local px, py, dx, dy, damping = 0, 0, 0, 0, .7
 local mousePressed = false
+local moveColor = "R"
+local black,red = {0,0.1,0.18}, {0.15,0.1,0.1}
 
 local function drawDebugLayout()
-	for i = 1,10,1 do
-		for j = 1,9,1 do
-			love.graphics.print(board.layout[j][i].type or " ", 30*j, 30*i)
-		end
-	end
+	for i = 1,10,1 do for j = 1,9,1 do
+		love.graphics.print(board.layout[j][i].type or " ", 30*j, 30*i)
+	end end
 end
 
 local function inBounds(x,y) return (x > 0) and (x < 10) and (y > 0) and (y < 11) end
 local emptySpace = { type = false, character = false }
 
 function love.load()
-	love.graphics.setBackgroundColor(0.1,0.1,0.1)
 	font = love.graphics.newFont("NotoSansTC-Bold.ttf",font_size)
 	love.graphics.setFont(font)
-	font:setFilter("nearest", "nearest", 0)
+	--font:setFilter("nearest", "nearest", 0)
 	
 	board = Board()
-	--board.theta = 0.5
 	love.graphics.setPointSize(2)
 end
 
 function love.draw()
+	love.graphics.setBackgroundColor(moveColor == "R" and red or black)
 	stars:draw()
-	love.graphics.setColor(0.9,0.9,1)
-	love.graphics.print(love.timer.getFPS(), 10, 10)
 	board:draw()
 end
 
@@ -69,7 +66,7 @@ end
 function love.mousepressed(x, y, button)
 	mousePressed, px, py = true, x, y
 	local i, j = board:nearestPosition(x, y)
-	if board.layout[i][j].type then
+	if board.layout[i][j].type and moveColor == board.layout[i][j].color then
 		board.activePiece = board.layout[i][j]
 		board.activePiece.x, board.activePiece.y = x, y
 	end
@@ -86,9 +83,15 @@ function love.mousereleased(x, y, button)
 		if board.activePiece:canMove(i, j) then
 			board.activePiece:move(i,j)
 			board.activePiece = emptySpace
+			moveColor = (moveColor == "R") and "B" or "R"
 		else
 			board.activePiece:update()
 			board.activePiece = emptySpace
 		end
 	end
+end
+
+
+function love.resize(w,h)
+	stars = Starfield(2000)
 end
