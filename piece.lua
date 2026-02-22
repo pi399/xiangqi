@@ -88,16 +88,17 @@ local rules =
 				for k = -10, 10, 1 do
 					if k ~= 0 then
 						local sign = k < 0 and -1 or 1
+						local counter = 0
 						if p.row + k == i and p.column == j then
 							for l = p.row + sign, p.row + k - sign, sign do
-								if p.board.layout[l][p.column].type then return pieceExists end
+								counter = counter + (p.board.layout[l][p.column].type and 1 or 0)
 							end
-							return true
+							return counter == 1 and pieceExists or counter == 0 and not pieceExists
 						elseif p.row == i and p.column + k == j then
 							for l = p.column + sign, p.column + k - sign, sign do
-								if p.board.layout[p.row][l].type then return pieceExists end
+								counter = counter + (p.board.layout[p.row][l].type and 1 or 0)
 							end
-							return true
+							return counter == 1 and pieceExists or counter == 0 and not pieceExists
 						end
 					end
 				end
@@ -228,6 +229,12 @@ rules.B = {
 	}
 }
 
+function generateRules(piece,color,type)
+	function piece:canTypeMove(i,j)
+		return rules[color][type].canMove(piece,i,j)
+	end
+end
+
 function newPiece(board,color,type,i,j)
 	
 	local p = {}
@@ -275,10 +282,4 @@ function newPiece(board,color,type,i,j)
 	function p:position() return self.row, self.column end
 	
 	return p
-end
-
-function generateRules(piece,color,type)
-	function piece:canTypeMove(i,j)
-		return rules[color][type].canMove(piece,i,j)
-	end
 end
