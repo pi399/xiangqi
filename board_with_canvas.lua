@@ -105,19 +105,21 @@ function Board()
 		--draw pieces
 		for j,row in ipairs(self.layout) do
         	for i,piece in ipairs(row) do
-        		if piece.type then
+        		if piece.type and piece ~= self.activePiece then
         			piece:draw()
         		end
         	end
         end
         
         love.graphics.pop()
+		if self.activePiece.type then self.activePiece:draw() end
+		
 	end
 	
 	function b:update(dt)
 		for j,row in ipairs(self.layout) do
         	for i,piece in ipairs(row) do
-        		if piece.type then
+        		if piece.type and piece ~= self.activePiece then
         			piece:update()
         		end
         	end
@@ -131,10 +133,8 @@ function Board()
 	end
 	
 	function b:getCoordinates(i,j)
-		
 		return	self.b + self.x + (i - 1) * self.sqDim,
 				self.b + self.y + (j - 1) * self.sqDim
-	
 	end
 	
 	function b:nearestPosition(x, y)
@@ -158,6 +158,8 @@ function Board()
     		b.layout[k][j] = newPiece(b, starting_layout[j][k][1], starting_layout[j][k][2], k, j)
 		end
     end
+	
+	b.activePiece = emptySpace
 	
 	return b
 	
