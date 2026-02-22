@@ -1,5 +1,5 @@
-require("board_with_canvas")
-require("piece_functions")
+require("board")
+require("piece")
 require("layout")
 require("starfield")
 
