@@ -20,7 +20,7 @@ function Board()
 	b.y				= 100
 	b.scale			= 0.5
 	b.theta			= 0
-	b.sqDim, b.height, b.width, b.b, b.cx, b.cy = 0,0,0,0,0,0
+	b.sqDim, b.height, b.width, b.b = 0,0,0,0
 	b.kingPositions = {R = {5, 10}, B = {5, 1}}
 	
 	function b:values(i)
@@ -28,7 +28,6 @@ function Board()
 		self.height = self.sqDim * 9
 		self.width = self.sqDim * 8
 		self.b = self.sqDim / 1.75
-		--self.cx, self.cy = self.b + self.x + self.width / 2, self.b + self.y + self.height / 2
 	end
 	
 	function b:createBoardCanvas()
@@ -129,7 +128,6 @@ function Board()
 	
 	function b:resize(dimension)
 		self.scale = dimension or self.scale
-		
 		local w, h = love.graphics.getDimensions()
 		self.x, self.y = w/2 - ( self.width + self.b * 2 ) / 2, h/2 - ( self.height + self.b * 2 ) / 2
 		self:values()

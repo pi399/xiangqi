@@ -6,6 +6,7 @@ require("starfield")
 local font
 local stars = Starfield(2000)
 local black,red = {0,0.1,0.18}, {0.15,0.1,0.1}
+local inCheck = false
 
 local px, py, dx, dy, damping = 0, 0, 0, 0, .7
 local mousePressed = false
@@ -22,7 +23,7 @@ end
 local emptySpace = { type = false, character = false }
 
 function love.load()
-	font = love.graphics.newFont("NotoSansTC-Bold.ttf",24)
+	font = love.graphics.newFont("NotoSansTC-Regular.ttf",18)
 	love.graphics.setFont(font)
 	board = Board()
 	love.graphics.setPointSize(2)
@@ -32,12 +33,14 @@ function love.draw()
 	love.graphics.setBackgroundColor(moveColor == "R" and red or black)
 	stars:draw()
 	board:draw()
+	love.graphics.setColor(1,1,1)
+	love.graphics.print((moveColor == "R" and "Red" or "Black").. " is " .. (inCheck and "in check" or "moving"), 10, 10)
 end
 
 local timer = 0
 function love.update(dt)
 	timer = timer + dt
-	board.theta = 0.03 * math.sin(timer / 3)		--slight board shake effect
+	board.theta = 0.01 * math.sin(timer / 3)		--slight board shake effect
 	board.x = board.x + 0.05 * math.sin(timer / 2)
 	stars:update(dt)
 	board:update(dt)
@@ -74,6 +77,7 @@ function love.mousereleased(x, y, button)
 		local i, j = board:nearestPosition(x, y)
 		if board.activePiece:move(i,j) then
 			moveColor = (moveColor == "R") and "B" or "R" -- change active player
+			inCheck = board:findChecks(moveColor)
 		end
 		board.activePiece:update()
 		board.activePiece = emptySpace

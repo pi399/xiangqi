@@ -1,25 +1,17 @@
-local characters = 
-{
-	R = {
-		K = "帥",
-		R = "俥",
-		H = "馬",
-    	C = "炮",
-	   	P = "兵",
-    	A = "仕",
-		E = "相"
-	},
-
-	B = {
-		K = "將",
-		R = "車",
-    	H = "馬",
-		C = "砲",
-		P = "卒",
-		A = "士",
-		E = "象"
-	}
-}
+local pieceImages = {B = {}, R = {}}
+local image = love.graphics.newImage("resources/textures/pieces.png")
+image:setFilter("nearest","nearest")
+if true then
+	local i = 1
+	local order = {"K", "R", "H", "C", "P", "A", "E", [0] = " "}
+	for y = 0,3,1 do
+		local color = (y < 2) and "B" or "R"
+		for x = 0,3,1 do
+			pieceImages[color][order[i % 8]] = love.graphics.newQuad(x*27,y*27,27,27,image)
+			i = i + 1
+		end
+	end
+end
 
 local emptySpace = { type = false, character = false }
 local function inBounds(x,y,low_x,high_x,low_y,high_y)
@@ -241,7 +233,6 @@ function newPiece(board,color,type,i,j)
 
 	p.type			= type
 	p.color			= color
-	p.character		= characters[color][type] or "無"
 	p.bodyColors	= {1,1,1}
 	p.textColors	= {color=="R" and 1 or 0,0,0}
 	p.board			= board
@@ -251,14 +242,8 @@ function newPiece(board,color,type,i,j)
 	p.x, p.y		= board:getCoordinates(i,j)
 
 	function p:draw()
-		local x = self.x
-		local y = self.y
-		
-		love.graphics.setColor(self.bodyColors)
-		love.graphics.circle("fill",x,y,self.size)
-		love.graphics.setColor(self.textColors)
-		love.graphics.circle("line",x,y,self.size)
-		love.graphics.print(self.character,x-self.size*.6,y-self.size*.95)
+		love.graphics.setColor(1,1,1)
+		love.graphics.draw(image,pieceImages[self.color][self.type], self.x - 13.5 / self.board.scale, self.y - 13.5 / self.board.scale, 0, 2, 2)
 	end
 
 	function p:move(i,j)
