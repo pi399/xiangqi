@@ -2,17 +2,18 @@ require("board")
 require("piece")
 require("layout")
 require("starfield")
+require("spring")
 
 local font
 local stars = Starfield(2000)
 local black,red = {0,0.1,0.18}, {0.15,0.1,0.1}
-local inCheck = false
 
-local px, py, dx, dy, damping = 0, 0, 0, 0, .7
 local mousePressed = false
 
 local board
+local springX, springY = Spring(500,20,0), Spring(500,20,0)
 local moveColor = "R"
+local inCheck = false
 
 local function drawDebugLayout()
 	for i = 1,9,1 do for j = 1,10,1 do
@@ -33,8 +34,10 @@ function love.draw()
 	love.graphics.setBackgroundColor(moveColor == "R" and red or black)
 	stars:draw()
 	board:draw()
-	love.graphics.setColor(1,1,1)
-	love.graphics.print((moveColor == "R" and "Red" or "Black").. " is " .. (inCheck and "in check" or "moving"), 10, 10)
+	love.graphics.setColor(0,0,0)
+	if inCheck then
+		love.graphics.print((moveColor == "R" and "Red" or "Black") .. " is in check!", 10, 10)
+	end
 end
 
 local timer = 0
@@ -44,13 +47,12 @@ function love.update(dt)
 	board.x = board.x + 0.05 * math.sin(timer / 2)
 	stars:update(dt)
 	board:update(dt)
+	springX:tick(dt)
+	springY:tick(dt)
 	
 	if mousePressed and board.activePiece then		--some physics to soften the piece moving with the mouse
 		local x, y = love.mouse.getPosition()
-		local x_vector, y_vector = (px - x), (py - y)
-		dx, dy = (dx + x_vector) * damping, (dy + y_vector) * damping
-		board.activePiece.x, board.activePiece.y = x + dx, y + dy
-		px, py = x, y
+		board.activePiece.x, board.activePiece.y = springX.position - 33, springY.position - 33
 	end
 end
 
@@ -65,9 +67,17 @@ end
 function love.mousepressed(x, y, button)
 	mousePressed, px, py = true, x, y
 	local i, j = board:nearestPosition(x, y)
-	if board.layout[i][j].type and moveColor == board.layout[i][j].color then
+	if moveColor == board.layout[i][j].color then
 		board.activePiece = board.layout[i][j]
 		board.activePiece.x, board.activePiece.y = x, y
+		springX.position, springY.position = x,y
+		springX.target, springY.target = x,y
+	end
+end
+
+function love.mousemoved(x,y,dx,dy)
+	if board.activePiece.type then
+		springX.target, springY.target = x, y
 	end
 end
 

@@ -221,12 +221,6 @@ rules.B = {
 	}
 }
 
-function generateRules(piece,color,type)
-	function piece:canTypeMove(i,j)
-		return rules[color][type].canMove(piece,i,j)
-	end
-end
-
 function newPiece(board,color,type,i,j)
 	
 	local p = {}
@@ -243,7 +237,7 @@ function newPiece(board,color,type,i,j)
 
 	function p:draw()
 		love.graphics.setColor(1,1,1)
-		love.graphics.draw(image,pieceImages[self.color][self.type], self.x - 13.5 / self.board.scale, self.y - 13.5 / self.board.scale, 0, 2, 2)
+		love.graphics.draw(image,pieceImages[self.color][self.type], self.x, self.y, 0, 3.5 * self.board.scale, 3.5 * self.board.scale)
 	end
 
 	function p:move(i,j)
@@ -274,15 +268,19 @@ function newPiece(board,color,type,i,j)
 		return false
 	end
 	
-	generateRules(p,p.color,p.type)
+	function p:generateRules(color,type)
+		function self:canTypeMove(i,j)
+			return rules[color or self.color][type or self.type].canMove(self,i,j)
+		end
+	end
+	
+	p:generateRules()
 	
 	function p:canMove(i,j)
 		if self.board.layout[i][j].color == self.color then return false end --cannot take your own piece
 		return inBounds(i,j) and self:canTypeMove(i,j)
 	end
 	
-	function p:update() self.x, self.y = board:getCoordinates(self.row, self.column) end
-	function p:position() return self.row, self.column end
-	
+	function p:update() self.x, self.y = board:getCoordinates(self.row, self.column) end	
 	return p
 end

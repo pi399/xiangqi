@@ -18,78 +18,89 @@ function Board()
 	b.baseDim		= 90
 	b.x				= 100
 	b.y				= 100
-	b.scale			= 0.5
+	b.scale			= 0.7
 	b.theta			= 0
+	
 	b.sqDim, b.height, b.width, b.b = 0,0,0,0
 	b.kingPositions = {R = {5, 10}, B = {5, 1}}
 	
 	function b:values(i)
+		local w, h = love.graphics.getDimensions()
 		self.sqDim = self.baseDim * (i or self.scale)
 		self.height = self.sqDim * 9
 		self.width = self.sqDim * 8
 		self.b = self.sqDim / 1.75
+		self.x, self.y = w/2 - ( self.width + self.b * 2 ) / 2, h/2 - ( self.height + self.b * 2 ) / 2
 	end
 	
-	function b:createBoardCanvas()
+	function b:createBoardCanvas(draw)
 		
 		self:values(1)
 		local canvas = love.graphics.newCanvas(self.width + self.b * 2, self.height + self.b * 2)
 		love.graphics.setCanvas(canvas)
-		love.graphics.setColor(self.bgColors)
-		love.graphics.rectangle("fill", 0, 0,
-							self.width + self.b * 2, self.height + self.b * 2,
-							self.b, self.b)
-		love.graphics.setColor(self.mainColors)
-		love.graphics.rectangle("line", self.b, self.b, self.width, self.height)
-
-		--draw lines
-		for i = 1,7,1 do
-			love.graphics.line(
-				self.b + self.sqDim * i,
-				self.b,
-				self.b + self.sqDim * i,
-				self.b + self.sqDim * 4 )
-			love.graphics.line(
-				self.b + self.sqDim * i,
-				self.b + self.sqDim * 5,
-				self.b + self.sqDim * i,
-				self.b + self.height)
-		end
+		
+		if draw == "draw" then
+			love.graphics.setColor(self.bgColors)
+			love.graphics.rectangle("fill", 0, 0,
+								self.width + self.b * 2, self.height + self.b * 2,
+								self.b, self.b)
+			love.graphics.setColor(self.mainColors)
+			love.graphics.rectangle("line", self.b, self.b, self.width, self.height)
 	
-		for j = 1,8,1 do
+			--draw lines
+			for i = 1,7,1 do
+				love.graphics.line(
+					self.b + self.sqDim * i,
+					self.b,
+					self.b + self.sqDim * i,
+					self.b + self.sqDim * 4 )
+				love.graphics.line(
+					self.b + self.sqDim * i,
+					self.b + self.sqDim * 5,
+					self.b + self.sqDim * i,
+					self.b + self.height)
+			end
+		
+			for j = 1,8,1 do
+				love.graphics.line(
+					self.b,
+					self.b + self.sqDim * j,
+					self.b + self.width,
+					self.b + self.sqDim * j)
+			end
+				
 			love.graphics.line(
-				self.b,
-				self.b + self.sqDim * j,
-				self.b + self.width,
-				self.b + self.sqDim * j)
+						self.b + self.sqDim * 3, 
+						self.b,
+						self.b + self.sqDim * 5,
+						self.b + self.sqDim * 2 )
+			love.graphics.line(
+						self.b + self.sqDim * 5,
+						self.b,
+						self.b + self.sqDim * 3,
+						self.b + self.sqDim * 2 )
+			love.graphics.line(
+						self.b + self.sqDim * 3,
+						self.b + self.sqDim * 7,
+						self.b + self.sqDim * 5,
+						self.b + self.height )
+			love.graphics.line(
+						self.b + self.sqDim * 5,
+						self.b + self.sqDim * 7,
+						self.b + self.sqDim * 3,
+						self.b + self.height )
+			love.graphics.setCanvas()
+		else
+			local boardImage = love.graphics.newImage("resources/textures/board.png")
+			boardImage:setFilter("nearest","nearest")
+			love.graphics.draw(boardImage,0,0,0,4*self.scale,4*self.scale)
+			love.graphics.setCanvas()
 		end
-			
-		love.graphics.line(
-					self.b + self.sqDim * 3, 
-					self.b,
-					self.b + self.sqDim * 5,
-					self.b + self.sqDim * 2 )
-		love.graphics.line(
-					self.b + self.sqDim * 5,
-					self.b,
-					self.b + self.sqDim * 3,
-					self.b + self.sqDim * 2 )
-		love.graphics.line(
-					self.b + self.sqDim * 3,
-					self.b + self.sqDim * 7,
-					self.b + self.sqDim * 5,
-					self.b + self.height )
-		love.graphics.line(
-					self.b + self.sqDim * 5,
-					self.b + self.sqDim * 7,
-					self.b + self.sqDim * 3,
-					self.b + self.height )
-		love.graphics.setCanvas()
 		self:values()
 		return canvas
 	end
 	
-	b.canvas = b:createBoardCanvas()
+	b.canvas = b:createBoardCanvas("draw")
 	
 	function b:draw()
 		
@@ -102,7 +113,7 @@ function Board()
 		love.graphics.setColor(self.bgColors)
 		love.graphics.draw(self.canvas,self.x,self.y,0,self.scale,self.scale)
 		
-		--draw pieces
+		--draw pieces, except for the selected piece
 		for j,row in ipairs(self.layout) do
         	for i,piece in ipairs(row) do
         		if piece.type and piece ~= self.activePiece then
@@ -112,8 +123,7 @@ function Board()
         end
         
         love.graphics.pop()
-		if self.activePiece.type then self.activePiece:draw() end
-		
+		if self.activePiece.type then self.activePiece:draw() end --draw selected piece on top of everything
 	end
 	
 	function b:update(dt)
@@ -135,8 +145,8 @@ function Board()
 	end
 	
 	function b:getCoordinates(i,j)
-		return	self.b + self.x + (i - 1) * self.sqDim,
-				self.b + self.y + (j - 1) * self.sqDim
+		return	self.b + self.x + (i - 1) * self.sqDim - 47.25 * self.scale,
+				self.b + self.y + (j - 1) * self.sqDim - 47.25 * self.scale
 	end
 	
 	function b:nearestPosition(x, y)
