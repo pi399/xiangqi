@@ -21,13 +21,14 @@ function Board()
 	b.scale			= 0.5
 	b.theta			= 0
 	b.sqDim, b.height, b.width, b.b, b.cx, b.cy = 0,0,0,0,0,0
+	b.kingPositions = {R = {5, 10}, B = {5, 1}}
 	
 	function b:values(i)
 		self.sqDim = self.baseDim * (i or self.scale)
 		self.height = self.sqDim * 9
 		self.width = self.sqDim * 8
 		self.b = self.sqDim / 1.75
-		self.cx, self.cy = self.b + self.x + self.width / 2, self.b + self.y + self.height / 2
+		--self.cx, self.cy = self.b + self.x + self.width / 2, self.b + self.y + self.height / 2
 	end
 	
 	function b:createBoardCanvas()
@@ -94,9 +95,9 @@ function Board()
 	function b:draw()
 		
 		love.graphics.push()
-		love.graphics.translate(self.cx,self.cy)
+		love.graphics.translate(self.x,self.y)
 		love.graphics.rotate(self.theta)
-		love.graphics.translate(-self.cx,-self.cy)
+		love.graphics.translate(-self.x,-self.y)
 		
 		--draw bg
 		love.graphics.setColor(self.bgColors)
@@ -128,6 +129,9 @@ function Board()
 	
 	function b:resize(dimension)
 		self.scale = dimension or self.scale
+		
+		local w, h = love.graphics.getDimensions()
+		self.x, self.y = w/2 - ( self.width + self.b * 2 ) / 2, h/2 - ( self.height + self.b * 2 ) / 2
 		self:values()
 		self:update()
 	end
@@ -143,13 +147,26 @@ function Board()
 		return round(i,j)
 	end
 	
+	function b:findChecks(onColor)
+		local otherColor = (onColor == "R") and "B" or "R"
+		local checkExists = false
+		for i, row in ipairs(self.layout) do
+			for j, piece in ipairs(row) do
+				if piece.color == otherColor then checkExists = 
+					piece:canMove(self.kingPositions[onColor][1],self.kingPositions[onColor][2])
+				end
+				if checkExists then return checkExists, onColor end
+			end
+		end
+	end
+	
 	--load pieces according to layout into table
 	b.layout = {}
 	
-	for j = 1, 10, 1 do
-		b.layout[j] = {}
-		for i = 1, 9, 1 do
-			b.layout[j][i] = emptySpace
+	for i = 1, 9, 1 do
+		b.layout[i] = {}
+		for j = 1, 10, 1 do
+			b.layout[i][j] = emptySpace
 		end
 	end
 	

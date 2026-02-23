@@ -3,31 +3,27 @@ require("piece")
 require("layout")
 require("starfield")
 
-local board
-
 local font
-local font_size = 24
 local stars = Starfield(2000)
+local black,red = {0,0.1,0.18}, {0.15,0.1,0.1}
 
 local px, py, dx, dy, damping = 0, 0, 0, 0, .7
 local mousePressed = false
+
+local board
 local moveColor = "R"
-local black,red = {0,0.1,0.18}, {0.15,0.1,0.1}
 
 local function drawDebugLayout()
-	for i = 1,10,1 do for j = 1,9,1 do
-		love.graphics.print(board.layout[j][i].type or " ", 30*j, 30*i)
+	for i = 1,9,1 do for j = 1,10,1 do
+		love.graphics.print(board.layout[i][j].type or " ", 30*j, 30*i)
 	end end
 end
 
-local function inBounds(x,y) return (x > 0) and (x < 10) and (y > 0) and (y < 11) end
 local emptySpace = { type = false, character = false }
 
 function love.load()
-	font = love.graphics.newFont("NotoSansTC-Bold.ttf",font_size)
+	font = love.graphics.newFont("NotoSansTC-Bold.ttf",24)
 	love.graphics.setFont(font)
-	--font:setFilter("nearest", "nearest", 0)
-	
 	board = Board()
 	love.graphics.setPointSize(2)
 end
@@ -41,12 +37,12 @@ end
 local timer = 0
 function love.update(dt)
 	timer = timer + dt
-	board.theta = 0.01 * math.sin(timer / 4)
-	board.x = 100+math.cos(timer)
+	board.theta = 0.03 * math.sin(timer / 3)		--slight board shake effect
+	board.x = board.x + 0.05 * math.sin(timer / 2)
 	stars:update(dt)
 	board:update(dt)
 	
-	if mousePressed and board.activePiece then
+	if mousePressed and board.activePiece then		--some physics to soften the piece moving with the mouse
 		local x, y = love.mouse.getPosition()
 		local x_vector, y_vector = (px - x), (py - y)
 		dx, dy = (dx + x_vector) * damping, (dy + y_vector) * damping
@@ -72,26 +68,21 @@ function love.mousepressed(x, y, button)
 	end
 end
 
-function love.mousemoved(x, y, dx, dy)
-
-end
-
 function love.mousereleased(x, y, button)
 	mousePressed = false
 	if board.activePiece.type then
 		local i, j = board:nearestPosition(x, y)
-		if board.activePiece:canMove(i, j) then
-			board.activePiece:move(i,j)
-			board.activePiece = emptySpace
-			moveColor = (moveColor == "R") and "B" or "R"
-		else
-			board.activePiece:update()
-			board.activePiece = emptySpace
+		if board.activePiece:move(i,j) then
+			moveColor = (moveColor == "R") and "B" or "R" -- change active player
 		end
+		board.activePiece:update()
+		board.activePiece = emptySpace
 	end
 end
 
 
 function love.resize(w,h)
-	stars = Starfield(2000)
+	stars = Starfield(w * h * 0.005)
+	board.x, board.y = w/2 - ( board.width + board.b * 2 ) / 2, h/2 - ( board.height + board.b * 2 ) / 2
+	board:values()
 end

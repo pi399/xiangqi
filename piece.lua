@@ -262,20 +262,38 @@ function newPiece(board,color,type,i,j)
 	end
 
 	function p:move(i,j)
-		if inBounds(i,j) then
+		if self:canMove(i,j) then
 			self.board.layout[self.row][self.column] = emptySpace
+			local save, save_row, save_column = self.board.layout[i][j], self.row, self.column
 			self.row = i
 			self.column = j
 			self.board.layout[i][j] = self
+			
+			if self.type == "K" then
+				self.board.kingPositions[self.color] = {i,j}
+			end
+			
+			if self.board:findChecks(self.color) then		--if you have checked yourself, undo the move. maybe there is a more efficient way?
+				self.row, self.column = save_row, save_column
+				self.board.layout[i][j] = save
+				self.board.layout[self.row][self.column] = self
+				if self.type == "K" then
+					self.board.kingPositions[self.color] = {save_row, save_column}
+				end
+				return false
+			end
+			
 			self:update()
+			return true
 		end
+		return false
 	end
 	
 	generateRules(p,p.color,p.type)
 	
 	function p:canMove(i,j)
 		if self.board.layout[i][j].color == self.color then return false end --cannot take your own piece
-		if inBounds(i,j) then return self:canTypeMove(i,j) end
+		return inBounds(i,j) and self:canTypeMove(i,j)
 	end
 	
 	function p:update() self.x, self.y = board:getCoordinates(self.row, self.column) end
