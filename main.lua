@@ -9,9 +9,9 @@ local stars = Starfield(2000)
 local black,red = {0,0.1,0.18}, {0.15,0.1,0.1}
 
 local mousePressed = false
+local springs = { X = Spring(500,20,0), Y = Spring(500,20,0) }
 
 local board
-local springX, springY = Spring(500,20,0), Spring(500,20,0)
 local moveColor = "R"
 local inCheck = false
 
@@ -26,16 +26,16 @@ local emptySpace = { type = false, character = false }
 function love.load()
 	font = love.graphics.newFont("NotoSansTC-Regular.ttf",18)
 	love.graphics.setFont(font)
-	board = Board()
 	love.graphics.setPointSize(2)
+	board = Board()
 end
 
 function love.draw()
 	love.graphics.setBackgroundColor(moveColor == "R" and red or black)
 	stars:draw()
 	board:draw()
-	love.graphics.setColor(0,0,0)
 	if inCheck then
+		love.graphics.setColor(1,1,1)
 		love.graphics.print((moveColor == "R" and "Red" or "Black") .. " is in check!", 10, 10)
 	end
 end
@@ -47,12 +47,11 @@ function love.update(dt)
 	board.x = board.x + 0.05 * math.sin(timer / 2)
 	stars:update(dt)
 	board:update(dt)
-	springX:tick(dt)
-	springY:tick(dt)
+	springs.X:tick(dt)
+	springs.Y:tick(dt)
 	
-	if mousePressed and board.activePiece then		--some physics to soften the piece moving with the mouse
-		local x, y = love.mouse.getPosition()
-		board.activePiece.x, board.activePiece.y = springX.position - 33, springY.position - 33
+	if mousePressed and board.activePiece then
+		board.activePiece.x, board.activePiece.y = springs.X.position, springs.Y.position
 	end
 end
 
@@ -70,14 +69,14 @@ function love.mousepressed(x, y, button)
 	if moveColor == board.layout[i][j].color then
 		board.activePiece = board.layout[i][j]
 		board.activePiece.x, board.activePiece.y = x, y
-		springX.position, springY.position = x,y
-		springX.target, springY.target = x,y
+		springs.X.position, springs.Y.position = x,y
+		springs.X.target, springs.Y.target = x,y
 	end
 end
 
 function love.mousemoved(x,y,dx,dy)
 	if board.activePiece.type then
-		springX.target, springY.target = x, y
+		springs.X.target, springs.Y.target = x, y
 	end
 end
 
@@ -89,7 +88,6 @@ function love.mousereleased(x, y, button)
 			moveColor = (moveColor == "R") and "B" or "R" -- change active player
 			inCheck = board:findChecks(moveColor)
 		end
-		board.activePiece:update()
 		board.activePiece = emptySpace
 	end
 end

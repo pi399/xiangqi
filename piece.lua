@@ -1,5 +1,7 @@
+--require("spring")
+
 local pieceImages = {B = {}, R = {}}
-local image = love.graphics.newImage("resources/textures/pieces.png")
+local image = love.graphics.newImage("resources/textures/2x/pieces.png")
 image:setFilter("nearest","nearest")
 if true then
 	local i = 1
@@ -7,12 +9,13 @@ if true then
 	for y = 0,3,1 do
 		local color = (y < 2) and "B" or "R"
 		for x = 0,3,1 do
-			pieceImages[color][order[i % 8]] = love.graphics.newQuad(x*27,y*27,27,27,image)
+			pieceImages[color][order[i % 8]] = love.graphics.newQuad(x*58,y*58,58,58,image)
 			i = i + 1
 		end
 	end
 end
 
+--local springs = { X = Spring(500,20,0), Y = Spring(500,20,0) }
 local emptySpace = { type = false, character = false }
 local function inBounds(x,y,low_x,high_x,low_y,high_y)
 	return x >= (low_x or 1) and x <= (high_x or 9) and y >= (low_y or 1) and y <= (high_y or 10)
@@ -237,7 +240,7 @@ function newPiece(board,color,type,i,j)
 
 	function p:draw()
 		love.graphics.setColor(1,1,1)
-		love.graphics.draw(image,pieceImages[self.color][self.type], self.x, self.y, 0, 3.5 * self.board.scale, 3.5 * self.board.scale)
+		love.graphics.draw(image,pieceImages[self.color][self.type], self.x, self.y, 0, 1.75*self.board.scale, 1.75*self.board.scale)
 	end
 
 	function p:move(i,j)
@@ -261,7 +264,6 @@ function newPiece(board,color,type,i,j)
 				end
 				return false
 			end
-			
 			self:update()
 			return true
 		end

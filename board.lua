@@ -9,6 +9,7 @@ local function round(x,y)
 	return x,y
 end
 
+
 function Board()
 	
 	local b = {}
@@ -145,8 +146,8 @@ function Board()
 	end
 	
 	function b:getCoordinates(i,j)
-		return	self.b + self.x + (i - 1) * self.sqDim - 47.25 * self.scale,
-				self.b + self.y + (j - 1) * self.sqDim - 47.25 * self.scale
+		return	self.b + self.x + (i - 1) * self.sqDim - 50 * self.scale,
+				self.b + self.y + (j - 1) * self.sqDim - 50 * self.scale
 	end
 	
 	function b:nearestPosition(x, y)
