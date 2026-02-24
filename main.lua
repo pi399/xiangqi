@@ -36,7 +36,7 @@ function love.draw()
 	board:draw()
 	if inCheck then
 		love.graphics.setColor(1,1,1)
-		love.graphics.print((moveColor == "R" and "Red" or "Black") .. " is in check!", 10, 10)
+		love.graphics.print((moveColor == "R" and "Red" or "Black") .. " is in check!", 40, love.graphics.getHeight() / 2)
 	end
 end
 
@@ -51,16 +51,16 @@ function love.update(dt)
 	springs.Y:tick(dt)
 	
 	if mousePressed and board.activePiece then
-		board.activePiece.x, board.activePiece.y = springs.X.position, springs.Y.position
+		board.activePiece.x, board.activePiece.y = springs.X.position - 30, springs.Y.position - 30
 	end
 end
 
 function love.keypressed(key)
-	if key == 'f' then
-		board:resize(board.scale+0.01)
+	--[[if key == 'f' then
+		board:resize(board.scale+0.05)
 	elseif key == 'r' then
-		board:resize(board.scale-0.01)
-	end
+		board:resize(board.scale-0.05)
+	end]]
 end
 
 function love.mousepressed(x, y, button)
@@ -96,5 +96,4 @@ end
 function love.resize(w,h)
 	stars = Starfield(w * h * 0.005)
 	board.x, board.y = w/2 - ( board.width + board.b * 2 ) / 2, h/2 - ( board.height + board.b * 2 ) / 2
-	board:values()
 end

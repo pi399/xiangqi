@@ -14,94 +14,27 @@ function Board()
 	
 	local b = {}
 	
+	local w, h = love.graphics.getDimensions()
+	
 	b.mainColors	= {0,0,0}
 	b.bgColors		= {0.8,0.8,0.5}
-	b.baseDim		= 90
-	b.x				= 100
-	b.y				= 100
-	b.scale			= 0.7
+	b.baseDim		= 60
+	b.sqDim			= 60
+	b.b				= 80
+	b.width			= b.sqDim * 8
+	b.height		= b.sqDim * 9
+	b.x				= w/2 - ( b.width + b.b * 2 ) / 2
+	b.y				= h/2 - ( b.height + b.b * 2 ) / 2
 	b.theta			= 0
-	
-	b.sqDim, b.height, b.width, b.b = 0,0,0,0
 	b.kingPositions = {R = {5, 10}, B = {5, 1}}
 	
-	function b:values(i)
-		local w, h = love.graphics.getDimensions()
-		self.sqDim = self.baseDim * (i or self.scale)
-		self.height = self.sqDim * 9
-		self.width = self.sqDim * 8
-		self.b = self.sqDim / 1.75
-		self.x, self.y = w/2 - ( self.width + self.b * 2 ) / 2, h/2 - ( self.height + self.b * 2 ) / 2
+	function b:createBoardImage()
+		local image = love.graphics.newImage("resources/textures/2x/board.png")
+		image:setFilter("nearest","nearest")
+		return image
 	end
 	
-	function b:createBoardCanvas(draw)
-		
-		self:values(1)
-		local canvas = love.graphics.newCanvas(self.width + self.b * 2, self.height + self.b * 2)
-		love.graphics.setCanvas(canvas)
-		
-		if draw == "draw" then
-			love.graphics.setColor(self.bgColors)
-			love.graphics.rectangle("fill", 0, 0,
-								self.width + self.b * 2, self.height + self.b * 2,
-								self.b, self.b)
-			love.graphics.setColor(self.mainColors)
-			love.graphics.rectangle("line", self.b, self.b, self.width, self.height)
-	
-			--draw lines
-			for i = 1,7,1 do
-				love.graphics.line(
-					self.b + self.sqDim * i,
-					self.b,
-					self.b + self.sqDim * i,
-					self.b + self.sqDim * 4 )
-				love.graphics.line(
-					self.b + self.sqDim * i,
-					self.b + self.sqDim * 5,
-					self.b + self.sqDim * i,
-					self.b + self.height)
-			end
-		
-			for j = 1,8,1 do
-				love.graphics.line(
-					self.b,
-					self.b + self.sqDim * j,
-					self.b + self.width,
-					self.b + self.sqDim * j)
-			end
-				
-			love.graphics.line(
-						self.b + self.sqDim * 3, 
-						self.b,
-						self.b + self.sqDim * 5,
-						self.b + self.sqDim * 2 )
-			love.graphics.line(
-						self.b + self.sqDim * 5,
-						self.b,
-						self.b + self.sqDim * 3,
-						self.b + self.sqDim * 2 )
-			love.graphics.line(
-						self.b + self.sqDim * 3,
-						self.b + self.sqDim * 7,
-						self.b + self.sqDim * 5,
-						self.b + self.height )
-			love.graphics.line(
-						self.b + self.sqDim * 5,
-						self.b + self.sqDim * 7,
-						self.b + self.sqDim * 3,
-						self.b + self.height )
-			love.graphics.setCanvas()
-		else
-			local boardImage = love.graphics.newImage("resources/textures/board.png")
-			boardImage:setFilter("nearest","nearest")
-			love.graphics.draw(boardImage,0,0,0,4*self.scale,4*self.scale)
-			love.graphics.setCanvas()
-		end
-		self:values()
-		return canvas
-	end
-	
-	b.canvas = b:createBoardCanvas("draw")
+	b.image = b:createBoardImage()
 	
 	function b:draw()
 		
@@ -110,9 +43,9 @@ function Board()
 		love.graphics.rotate(self.theta)
 		love.graphics.translate(-self.x,-self.y)
 		
-		--draw bg
+		--draw board
 		love.graphics.setColor(self.bgColors)
-		love.graphics.draw(self.canvas,self.x,self.y,0,self.scale,self.scale)
+		love.graphics.draw(self.image,self.x,self.y)
 		
 		--draw pieces, except for the selected piece
 		for j,row in ipairs(self.layout) do
@@ -137,22 +70,15 @@ function Board()
         end
 	end
 	
-	function b:resize(dimension)
-		self.scale = dimension or self.scale
-		local w, h = love.graphics.getDimensions()
-		self.x, self.y = w/2 - ( self.width + self.b * 2 ) / 2, h/2 - ( self.height + self.b * 2 ) / 2
-		self:values()
-		self:update()
-	end
-	
 	function b:getCoordinates(i,j)
-		return	self.b + self.x + (i - 1) * self.sqDim - 50 * self.scale,
-				self.b + self.y + (j - 1) * self.sqDim - 50 * self.scale
+		return	self.b + self.x + (i - 1) * self.sqDim - 29,
+				self.b + self.y + (j - 1) * self.sqDim - 29
 	end
 	
 	function b:nearestPosition(x, y)
-		local i = math.floor((x - self.x) / self.sqDim) + 1
-		local j = math.floor((y - self.y) / self.sqDim) + 1
+		local i = math.floor((x - (self.x + self.b) + 87) / self.sqDim)
+		local j = math.floor((y - (self.y + self.b) + 87) / self.sqDim) 
+		
 		return round(i,j)
 	end
 	

@@ -14,6 +14,7 @@ function Spring(springiness,damping,position)
 		end
 		self.velocity = self.velocity + dt * self.spr * (self.target - self.position)
 		self.position = self.position + dt * self.velocity
+		return position + dt * self.velocity
 	end
 	return s
 end
