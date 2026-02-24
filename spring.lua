@@ -16,5 +16,15 @@ function Spring(springiness,damping,position)
 		self.position = self.position + dt * self.velocity
 		return position + dt * self.velocity
 	end
+	
+	function s:reset(x,y)
+		self.velocity = 0
+		self.target = x
+		if y then
+			self.position = y
+		else
+			self.position = x
+		end
+	end
 	return s
 end

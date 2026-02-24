@@ -1,4 +1,5 @@
 require("piece")
+require("spring")
 
 local emptySpace = { type = false, character = false }
 local function round(x,y)
@@ -9,6 +10,8 @@ local function round(x,y)
 	return x,y
 end
 
+local springs = { X = Spring(500,20,0), Y = Spring(500,20,0) }
+local mousePressed = false
 
 function Board()
 	
@@ -27,6 +30,7 @@ function Board()
 	b.y				= h/2 - ( b.height + b.b * 2 ) / 2
 	b.theta			= 0
 	b.kingPositions = {R = {5, 10}, B = {5, 1}}
+	b.moveColor		= "R"
 	
 	function b:createBoardImage()
 		local image = love.graphics.newImage("resources/textures/2x/board.png")
@@ -55,9 +59,8 @@ function Board()
         		end
         	end
         end
-        
-        love.graphics.pop()
 		if self.activePiece.type then self.activePiece:draw() end --draw selected piece on top of everything
+        love.graphics.pop()
 	end
 	
 	function b:update(dt)
@@ -68,6 +71,44 @@ function Board()
         		end
         	end
         end
+        
+		if self.activePiece.type then
+			if mousePressed then
+				local x, y = love.mouse.getPosition()
+				springs.X.target, springs.Y.target = x - 30, y - 30
+			else
+				local x, y = self:getCoordinates(self.activePiece.row, self.activePiece.column)
+				springs.X.target, springs.Y.target = x, y
+			end
+		end
+		
+        springs.X:tick(dt)
+        springs.Y:tick(dt)
+        
+        self.activePiece.x, self.activePiece.y = springs.X.position, springs.Y.position
+	end
+	
+	function b:mousePressed(x,y,button)
+		mousePressed = true
+		if self.activePiece.type then self.activePiece:update() self.activePiece = emptySpace end
+		local i, j = self:nearestPosition(x, y)
+		if self.moveColor == self.layout[i][j].color then
+			self.activePiece = self.layout[i][j]
+			local o, p = self:getCoordinates(i,j)
+			springs.X:reset(x - 30, o)
+			springs.Y:reset(y - 30, p)
+		end
+	end
+	
+	function b:mouseReleased(x,y)
+		mousePressed = false
+		if self.activePiece.type then
+			local i, j = self:nearestPosition(x,y)
+			if self.activePiece:move(i,j) then self.moveColor = self.moveColor == "R" and "B" or "R" end
+			local returnX, returnY = self:getCoordinates(self.activePiece.row, self.activePiece.column)
+			springs.X.target = returnX
+			springs.Y.target = returnY
+		end
 	end
 	
 	function b:getCoordinates(i,j)
@@ -112,7 +153,5 @@ function Board()
     end
 	
 	b.activePiece = emptySpace
-	
 	return b
-	
 end
