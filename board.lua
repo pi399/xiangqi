@@ -29,19 +29,20 @@ function Board()
 	b.x				= w/2 - ( b.width + b.b * 2 ) / 2
 	b.y				= h/2 - ( b.height + b.b * 2 ) / 2
 	b.theta			= 0
+	
 	b.kingPositions = {R = {5, 10}, B = {5, 1}}
 	b.moveColor		= "R"
+	b.layout		= {}
 	
 	function b:createBoardImage()
-		local image = love.graphics.newImage("resources/textures/2x/board.png")
-		image:setFilter("nearest","nearest")
-		return image
+		self.image = love.graphics.newImage("resources/textures/2x/board.png")
+		self.image:setFilter("nearest","nearest")
 	end
 	
-	b.image = b:createBoardImage()
+	b:createBoardImage()
 	
 	function b:draw()
-		
+		--rotate depending on theta
 		love.graphics.push()
 		love.graphics.translate(self.x,self.y)
 		love.graphics.rotate(self.theta)
@@ -59,7 +60,9 @@ function Board()
         		end
         	end
         end
-		if self.activePiece.type then self.activePiece:draw() end --draw selected piece on top of everything
+        
+        --draw selected piece last
+		if self.activePiece.type then self.activePiece:draw() end
         love.graphics.pop()
 	end
 	
@@ -79,13 +82,12 @@ function Board()
 			else
 				local x, y = self:getCoordinates(self.activePiece.row, self.activePiece.column)
 				springs.X.target, springs.Y.target = x, y
-			end
+			end	
+			self.activePiece.x, self.activePiece.y = springs.X.position, springs.Y.position
 		end
 		
         springs.X:tick(dt)
         springs.Y:tick(dt)
-        
-        self.activePiece.x, self.activePiece.y = springs.X.position, springs.Y.position
 	end
 	
 	function b:mousePressed(x,y,button)
@@ -111,6 +113,12 @@ function Board()
 		end
 	end
 	
+	function b:center()
+		local w,h = love.graphics.getDimensions()
+		self.x, self.y = w/2 - ( self.width + self.b * 2 ) / 2, h/2 - ( self.height + self.b * 2 ) / 2
+		if self.activePiece.type then self.activePiece:update() self.activePiece = emptySpace end
+	end
+	
 	function b:getCoordinates(i,j)
 		return	self.b + self.x + (i - 1) * self.sqDim - 29,
 				self.b + self.y + (j - 1) * self.sqDim - 29
@@ -119,7 +127,6 @@ function Board()
 	function b:nearestPosition(x, y)
 		local i = math.floor((x - (self.x + self.b) + 87) / self.sqDim)
 		local j = math.floor((y - (self.y + self.b) + 87) / self.sqDim) 
-		
 		return round(i,j)
 	end
 	
@@ -137,21 +144,24 @@ function Board()
 	end
 	
 	--load pieces according to layout into table
-	b.layout = {}
-	
-	for i = 1, 9, 1 do
-		b.layout[i] = {}
-		for j = 1, 10, 1 do
-			b.layout[i][j] = emptySpace
+	function b:loadLayout()
+		for i = 1, 9, 1 do
+			self.layout[i] = {}
+			for j = 1, 10, 1 do
+				self.layout[i][j] = emptySpace
+			end
 		end
-	end
-	
-	for j,i in pairs(starting_layout) do
-    	for k,v in pairs(i) do
-    		b.layout[k][j] = newPiece(b, starting_layout[j][k][1], starting_layout[j][k][2], k, j)
-		end
+		
+		for j,i in pairs(starting_layout) do
+    		for k,v in pairs(i) do
+    			self.layout[k][j] = newPiece(self, starting_layout[j][k][1], starting_layout[j][k][2], k, j)
+			end
+    	end
+    
+    	self.moveColor = "R"
+    	self.activePiece = emptySpace
     end
-	
-	b.activePiece = emptySpace
+    
+	b:loadLayout()
 	return b
 end
