@@ -32,8 +32,8 @@ end
 local timer = 0
 function love.update(dt)
 	timer = timer + dt
-	B.theta = 0.01 * math.sin(timer / 3)		--slight board shake effect
-	B.x = B.x + 0.05 * math.sin(timer / 2)
+	B.theta = 0.01 * math.sin(timer / 3)		--slight board shake effect / celery man
+	B.x = B.x + 0.05 * math.sin(timer / 2) -- hat wobble
 	stars:update(dt)
 	B:update(dt)
 	if audioOn and not bgm:isPlaying() then
