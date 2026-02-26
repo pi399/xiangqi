@@ -12,6 +12,7 @@ end
 
 local springs = { X = Spring(500,20,0), Y = Spring(500,20,0) }
 local mousePressed = false
+local flipped = false
 
 function Board()
 	
@@ -67,6 +68,8 @@ function Board()
 	end
 	
 	function b:update(dt)
+		local dt = dt or love.timer.step()
+	
 		for j,row in ipairs(self.layout) do
         	for i,piece in ipairs(row) do
         		if piece.type and piece ~= self.activePiece then
@@ -106,7 +109,10 @@ function Board()
 		mousePressed = false
 		if self.activePiece.type then
 			local i, j = self:nearestPosition(x,y)
-			if self.activePiece:move(i,j) then self.moveColor = self.moveColor == "R" and "B" or "R" end
+			if self.activePiece:move(i,j) then
+				self.moveColor = self.moveColor == "R" and "B" or "R"
+				self:reverse()
+			end
 			local returnX, returnY = self:getCoordinates(self.activePiece.row, self.activePiece.column)
 			springs.X.target = returnX
 			springs.Y.target = returnY
@@ -120,13 +126,13 @@ function Board()
 	end
 	
 	function b:getCoordinates(i,j)
-		return	self.b + self.x + (i - 1) * self.sqDim - 29,
-				self.b + self.y + (j - 1) * self.sqDim - 29
+		return	self.b + self.x + (flipped and self.width or 0) + (flipped and -1 or 1) * (i - 1) * self.sqDim - 29,
+				self.b + self.y + (flipped and self.height or 0) + (flipped and -1 or 1) * (j - 1) * self.sqDim - 29
 	end
 	
 	function b:nearestPosition(x, y)
-		local i = math.floor((x - (self.x + self.b) + 87) / self.sqDim)
-		local j = math.floor((y - (self.y + self.b) + 87) / self.sqDim) 
+		local i = (flipped and 10 or 0) + (flipped and -1 or 1) * math.floor((x - (self.x + self.b) + 87) / self.sqDim)
+		local j = (flipped and 11 or 0) + (flipped and -1 or 1) * math.floor((y - (self.y + self.b) + 87) / self.sqDim)
 		return round(i,j)
 	end
 	
@@ -143,6 +149,15 @@ function Board()
 		end
 	end
 	
+	function b:reverse()
+		flipped = not flipped
+		--if self.activePiece.type then
+		--	local x,y = self:getCoordinates(self.activePiece.row, self.activePiece.column)
+			--springs.X:reset(x)
+			--springs.Y:reset(y)
+		--end
+	end
+	
 	--load pieces according to layout into table
 	function b:loadLayout()
 		for i = 1, 9, 1 do
@@ -157,7 +172,7 @@ function Board()
     			self.layout[k][j] = newPiece(self, starting_layout[j][k][1], starting_layout[j][k][2], k, j)
 			end
     	end
-    
+    	
     	self.moveColor = "R"
     	self.activePiece = emptySpace
     end

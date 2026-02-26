@@ -4,6 +4,7 @@ image:setFilter("nearest","nearest")
 if true then
 	local i = 1
 	local order = {"K", "R", "H", "C", "P", "A", "E", [0] = " "}
+	--King Rook Horse Cannon Pawn Advisor Elephant
 	for y = 0,3,1 do
 		local color = (y < 2) and "B" or "R"
 		for x = 0,3,1 do

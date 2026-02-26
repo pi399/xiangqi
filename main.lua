@@ -8,7 +8,7 @@ local bgm = love.audio.newSource("resources/audio/tendas.mp3", "stream") bgm:set
 local audioOn = true
 
 local stars = Starfield(2000)
-local black,red = {0.1,0.1,0.15}, {0.15,0.1,0.1}
+local black,red = {0.1,0.1,0.17}, {0.17,0.1,0.1}
 
 local B
 local inCheck = false
