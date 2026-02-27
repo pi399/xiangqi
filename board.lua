@@ -10,7 +10,6 @@ local function round(x,y)
 	return x,y
 end
 
-local springs = { X = Spring(500,20,0), Y = Spring(500,20,0) }
 local mousePressed = false
 local flipped = false
 
@@ -73,7 +72,7 @@ function Board()
 		for j,row in ipairs(self.layout) do
         	for i,piece in ipairs(row) do
         		if piece.type and piece ~= self.activePiece then
-        			piece:update()
+        			piece:update(dt, true)
         		end
         	end
         end
@@ -81,27 +80,20 @@ function Board()
 		if self.activePiece.type then
 			if mousePressed then
 				local x, y = love.mouse.getPosition()
-				springs.X.target, springs.Y.target = x - 30, y - 30
-			else
-				local x, y = self:getCoordinates(self.activePiece.row, self.activePiece.column)
-				springs.X.target, springs.Y.target = x, y
-			end	
-			self.activePiece.x, self.activePiece.y = springs.X.position, springs.Y.position
+				self.activePiece.xspr.t, self.activePiece.yspr.t = x - 30, y - 30
+			end
+			self.activePiece:update(dt, false)
 		end
-		
-        springs.X:tick(dt)
-        springs.Y:tick(dt)
 	end
 	
 	function b:mousePressed(x,y,button)
 		mousePressed = true
-		if self.activePiece.type then self.activePiece:update() self.activePiece = emptySpace end
 		local i, j = self:nearestPosition(x, y)
 		if self.moveColor == self.layout[i][j].color then
 			self.activePiece = self.layout[i][j]
 			local o, p = self:getCoordinates(i,j)
-			springs.X:reset(x - 30, o)
-			springs.Y:reset(y - 30, p)
+			self.activePiece.xspr:reset(x - 30, o)
+			self.activePiece.yspr:reset(y - 30, p)
 		end
 	end
 	
@@ -111,18 +103,14 @@ function Board()
 			local i, j = self:nearestPosition(x,y)
 			if self.activePiece:move(i,j) then
 				self.moveColor = self.moveColor == "R" and "B" or "R"
-				self:reverse()
+				--self:reverse()
 			end
-			local returnX, returnY = self:getCoordinates(self.activePiece.row, self.activePiece.column)
-			springs.X.target = returnX
-			springs.Y.target = returnY
 		end
 	end
 	
 	function b:center()
-		local w,h = love.graphics.getDimensions()
-		self.x, self.y = w/2 - ( self.width + self.b * 2 ) / 2, h/2 - ( self.height + self.b * 2 ) / 2
-		if self.activePiece.type then self.activePiece:update() self.activePiece = emptySpace end
+		local w,h		= love.graphics.getDimensions()
+		self.x, self.y	= w/2 - ( self.width + self.b * 2 ) / 2, h/2 - ( self.height + self.b * 2 ) / 2
 	end
 	
 	function b:getCoordinates(i,j)
@@ -149,13 +137,12 @@ function Board()
 		end
 	end
 	
-	function b:reverse()
-		flipped = not flipped
-		--if self.activePiece.type then
-		--	local x,y = self:getCoordinates(self.activePiece.row, self.activePiece.column)
-			--springs.X:reset(x)
-			--springs.Y:reset(y)
-		--end
+	function b:reverse(reset)
+		if reset then
+			flipped = false
+		else
+			flipped = not flipped
+		end
 	end
 	
 	--load pieces according to layout into table
@@ -175,6 +162,7 @@ function Board()
     	
     	self.moveColor = "R"
     	self.activePiece = emptySpace
+    	self:reverse(true)
     end
     
 	b:loadLayout()

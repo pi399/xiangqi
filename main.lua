@@ -5,11 +5,11 @@ require("starfield")
 require("spring")
 
 local bgm = love.audio.newSource("resources/audio/tendas.mp3", "stream") bgm:setVolume(0.6) bgm:setLooping(false)
+local nebula = love.graphics.newImage("resources/textures/photo/milky_way.jpg")
 local audioOn = true
 
 local stars = Starfield(2000)
-local black,red = {0.1,0.1,0.17}, {0.17,0.1,0.1}
-
+local black,red = {0.2,0.2,0.34}, {0.34,0.2,0.2}
 local B
 local inCheck = false
 
@@ -21,8 +21,12 @@ end
 
 function love.draw()
 	love.graphics.setBackgroundColor(B.moveColor == "R" and red or black)
+	love.graphics.setColor(1,1,1,0.6)
+	love.graphics.draw(nebula,-50,-50,-B.theta)
 	stars:draw()
 	B:draw()
+	love.graphics.setColor(1,1,1)
+	love.graphics.print(love.timer.getFPS(),20,20)
 	if inCheck then
 		love.graphics.setColor(1,1,1)
 		love.graphics.print((B.moveColor == "R" and "Red" or "Black") .. " is in check!", 40, love.graphics.getHeight() / 2)
@@ -33,7 +37,7 @@ local timer = 0
 function love.update(dt)
 	timer = timer + dt
 	B.theta = 0.01 * math.sin(timer / 3)		--slight board shake effect / celery man
-	B.x = B.x + 0.05 * math.sin(timer / 2) -- hat wobble
+	B.x = B.x + 0.05 * math.sin(timer / 2)
 	stars:update(dt)
 	B:update(dt)
 	if audioOn and not bgm:isPlaying() then
@@ -52,6 +56,8 @@ function love.keypressed(key)
 		else
 			bgm:play()
 		end
+	elseif key == 'y' then
+		B.x, B.y = love.mouse.getPosition()
 	end
 end
 

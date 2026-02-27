@@ -3,27 +3,28 @@ function Spring(springiness,damping,position)
 	s.spr = springiness
 	s.damping = damping
 	s.velocity = 0
-	s.position = position
-	s.target = position
+	s.p = position
+	s.t = position
 	function s:tick(dt)
-		local deceleration = dt * self.damping * self.velocity
-		if math.abs(self.velocity) > math.abs(deceleration) then
-			self.velocity = self.velocity - deceleration
-		else
-			self.velocity = 0
+		if math.abs(self.p - self.t) > 0.001 then
+			local deceleration = dt * self.damping * self.velocity
+			if math.abs(self.velocity) > math.abs(deceleration) then
+				self.velocity = self.velocity - deceleration
+			else
+				self.velocity = 0
+			end
+			self.velocity = self.velocity + dt * self.spr * (self.t - self.p)
+			self.p = self.p + dt * self.velocity
 		end
-		self.velocity = self.velocity + dt * self.spr * (self.target - self.position)
-		self.position = self.position + dt * self.velocity
-		return position + dt * self.velocity
 	end
 	
 	function s:reset(x,y)
 		self.velocity = 0
-		self.target = x
+		self.t = x
 		if y then
-			self.position = y
+			self.p = y
 		else
-			self.position = x
+			self.p = x
 		end
 	end
 	return s

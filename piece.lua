@@ -1,3 +1,5 @@
+require("spring")
+
 local pieceImages = {B = {}, R = {}}
 local image = love.graphics.newImage("resources/textures/2x/pieces.png")
 image:setFilter("nearest","nearest")
@@ -27,12 +29,21 @@ local rules =
 	R = { 
 		K = {
 			["canMove"]	= function(p,i,j)
+				local validMovement = false
 				for k = -1, 1, 2 do
 					if (p.row + k == i and p.column == j or
 						p.row == i and p.column + k == j) then
-						return inBounds(i,j,4,6,8,10)
+						validMovement = inBounds(i,j,4,6,8,10)
 					end
 				end
+				--[[
+				if validMovement and p.board.kingPositions.B[1] == i then
+					for l = p.column - 1, p.board.kingPositions.B[2] + 1, -1 do
+						if p.board.layout[i][l].type then return p.board.layout[i][l].type end
+					end
+					return false
+				end]]
+				return validMovement
 			end,
 			["moves"]	= {{1,0},{-1,0},{0,1},{0,-1}},
 			["threats"]	= {{1,0},{-1,0},{0,1},{0,-1},{0,"K"}},
@@ -118,7 +129,7 @@ local rules =
 				for k = -1, 1, 2 do
 					for l = -1, 1, 2 do
 						if (p.row + k == i and p.column + l == j)
-							and inBounds(i,j,4,6,7,10) then return true end
+							and inBounds(i,j,4,6,8,10) then return true end
 					end
 				end
 			end,
@@ -147,12 +158,21 @@ local rules =
 rules.B = {
 	K = {
 		["canMove"]	= function(p,i,j)
-			for k = -1, 1, 2 do
-				if (p.row + k == i and p.column == j or
-					p.row == i and p.column + k == j) then
-					return inBounds(i,j,4,6,1,3)
+			local validMovement = false
+				for k = -1, 1, 2 do
+					if (p.row + k == i and p.column == j or
+						p.row == i and p.column + k == j) then
+						validMovement = inBounds(i,j,4,6,1,3)
+					end
 				end
-			end
+				--[[local inBetweenPieceExists = false
+				if validMovement and p.board.kingPositions.R[1] == i then
+					for l = p.column + 1, p.board.kingPositions.R[2] - 1, 1 do
+						if p.board.layout[i][l].type then return p.board.layout[i][l].type end
+					end
+					return false
+				end]]
+				return validMovement
 		end,
 		["moves"]	= {{1,0},{-1,0},{0,1},{0,-1}},
 		["threats"]	= {{1,0},{-1,0},{0,1},{0,-1},{0,"K"}},
@@ -234,14 +254,16 @@ function newPiece(board,color,type,i,j)
 	p.size			= 20
 	p.row			= i
 	p.column		= j
-	p.x, p.y		= board:getCoordinates(i,j)
-
+	p.x,  p.y		= board:getCoordinates(i,j)
+	p.xspr, p.yspr  = Spring(500,20,p.x), Spring(500,20,p.y)
+	
 	function p:draw()
 		love.graphics.setColor(1,1,1)
-		love.graphics.draw(image,pieceImages[self.color][self.type], self.x, self.y)
+		love.graphics.draw(image,pieceImages[self.color][self.type], self.x, self.y, -self.board.theta)
 	end
 
 	function p:move(i,j)
+		self.board.activePiece = emptySpace
 		if self:canMove(i,j) then
 			self.board.layout[self.row][self.column] = emptySpace
 			local save, save_row, save_column = self.board.layout[i][j], self.row, self.column
@@ -253,7 +275,16 @@ function newPiece(board,color,type,i,j)
 				self.board.kingPositions[self.color] = {i,j}
 			end
 			
-			if self.board:findChecks(self.color) then		--if you have checked yourself, undo the move. maybe there is a more efficient way?
+			local kingsFacing = self.board.kingPositions.B[1] == self.board.kingPositions.R[1]
+			local pieceInBetween = false
+			if kingsFacing then
+				for l = self.board.kingPositions.B[2] + 1, self.board.kingPositions.R[2] - 1, 1 do
+					pieceInBetween = pieceInBetween or self.board.layout[self.board.kingPositions.B[1]][l].type
+				end
+			end
+			
+			--if the proposed move puts the moving player in check, or causes the kings to face, then undo the move.
+			if (kingsFacing and not pieceInBetween) or self.board:findChecks(self.color) then
 				self.row, self.column = save_row, save_column
 				self.board.layout[i][j] = save
 				self.board.layout[self.row][self.column] = self
@@ -262,7 +293,6 @@ function newPiece(board,color,type,i,j)
 				end
 				return false
 			end
-			self:update()
 			return true
 		end
 		return false
@@ -281,6 +311,14 @@ function newPiece(board,color,type,i,j)
 		return inBounds(i,j) and self:canTypeMove(i,j)
 	end
 	
-	function p:update() self.x, self.y = board:getCoordinates(self.row, self.column) end	
+	function p:update(dt,snapped)
+		local dt = dt or love.timer.step()
+		if snapped then
+			self.xspr.t, self.yspr.t = board:getCoordinates(self.row, self.column)
+		end
+		self.xspr:tick(dt) self.yspr:tick(dt)
+		self.x, self.y = self.xspr.p, self.yspr.p
+	end	
+	
 	return p
 end

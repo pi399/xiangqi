@@ -4,8 +4,8 @@ function Starfield(num)
 	
 	local random = love.math.random
 	for i = 1, num do
-		local color = math.max(random(),0.3) * math.max(random(),0.3)	--generate speeds and brightnesses
-		local speed = 10 * color * random()
+		local color = math.max(random(),0.5) * math.max(random(),0.5)	--generate speeds and brightnesses
+		local speed = 10 * color * random() * random()
 		starfield[i] = {
 			random(5, screen_width-5),
 			random(5, screen_height - 5),
