@@ -6,7 +6,7 @@ image:setFilter("nearest","nearest")
 if true then
 	local i = 1
 	local order = {"K", "R", "H", "C", "P", "A", "E", [0] = " "}
-	--King Rook Horse Cannon Pawn Advisor Elephant
+	--King Rook Horse Cannon Pawn Advisor Elephant Blank
 	for y = 0,3,1 do
 		local color = (y < 2) and "B" or "R"
 		for x = 0,3,1 do
@@ -27,31 +27,15 @@ local horseBlocks= {{1,0},{-1,0},{1,0}, {-1,0}, {0,1},{0,1}, {0,-1},{0,-1}}
 local rules =
 {
 	R = { 
-		K = {
-			["canMove"]	= function(p,i,j)
-				local validMovement = false
+		K = function(p,i,j)
 				for k = -1, 1, 2 do
 					if (p.row + k == i and p.column == j or
 						p.row == i and p.column + k == j) then
-						validMovement = inBounds(i,j,4,6,8,10)
+						return inBounds(i,j,4,6,8,10)
 					end
 				end
-				--[[
-				if validMovement and p.board.kingPositions.B[1] == i then
-					for l = p.column - 1, p.board.kingPositions.B[2] + 1, -1 do
-						if p.board.layout[i][l].type then return p.board.layout[i][l].type end
-					end
-					return false
-				end]]
-				return validMovement
 			end,
-			["moves"]	= {{1,0},{-1,0},{0,1},{0,-1}},
-			["threats"]	= {{1,0},{-1,0},{0,1},{0,-1},{0,"K"}},
-			["blocks"]	= nil,
-			["confines"]= {4, 6, 8, 10} --red palace
-		},
-		R = {
-			["canMove"]	= function(p,i,j)
+		R = function(p,i,j)
 				for k = -10, 10, 1 do
 					if k ~= 0 then
 						local sign = k < 0 and -1 or 1
@@ -69,25 +53,14 @@ local rules =
 					end
 				end
 			end,
-			["moves"]	= {{"R",0},{0,"R"}},
-			["threats"] = {{"R",0},{0,"R"}},
-			["blocks"]	= nil,
-			["confines"]= nil
-		},
-		H = {
-			["canMove"] = function(p,i,j)
+		H = function(p,i,j)
 				for k, v in ipairs(horseMoves) do
 					if (p.row + v[1] == i and p.column + v[2] == j) then
 						return not p.board.layout[p.row + horseBlocks[k][1]][p.column + horseBlocks[k][2]].type
 					end
 				end
 			end,
-			["threats"] = {{2,1},{-2,1},{2,-1},{-2,-1},{1,2},{-1,2},{1,-2},{-1,-2}},
-			["blocks"]	= {{1,0},{-1,0},{1,0}, {-1,0}, {0,1},{0,1}, {0,-1},{0,-1}},
-			["confines"]= nil
-		},
-	   	C = {
-	   		["canMove"] = function(p,i,j)
+	   	C = function(p,i,j)
 	   			local pieceExists = p.board.layout[i][j].type
 				for k = -10, 10, 1 do
 					if k ~= 0 then
@@ -107,25 +80,13 @@ local rules =
 					end
 				end
 			end,
-	   		["moves"]	= {{"R",0},{0,"R"}},
-	   		["threats"]	= {{"C",0},{0,"C"}},
-	   		["blocks"]	= nil,
-	   		["confines"]= nil
-	   	},
-	   	P = {
-	   		["canMove"]	= function(p,i,j)
+	   	P = function(p,i,j)
 				if p.row == i and p.column - 1 == j then return true 
 				elseif inBounds(i,j, 1, 9, 1, 5) then
 					return p.row - 1 == i and p.column == j or p.row + 1 == i and p.column == j
 				end
 			end,
-	   		["moves"]	= {{0,-1}},
-	   		["threats"]	= {{0,-1}},
-	   		["blocks"]	= nil,
-	   		["confines"]= nil
-	   	},
-	   	A = {
-	   		["canMove"] = function(p,i,j)
+	   	A = function(p,i,j)
 				for k = -1, 1, 2 do
 					for l = -1, 1, 2 do
 						if (p.row + k == i and p.column + l == j)
@@ -133,12 +94,7 @@ local rules =
 					end
 				end
 			end,
-	   		["threats"]	= {{1,1},{1,-1},{-1,1},{-1,-1}},
-	   		["blocks"]	= nil,
-	  		["confines"]= {4, 6, 8, 10}	--red palace
-	    },
-		E = {
-			["canMove"] = function(p,i,j)
+		E = function(p,i,j)
 				for k = -2, 2, 4 do
 					for l = -2, 2, 4 do
 						if (p.row + k == i and p.column + l == j)
@@ -146,73 +102,29 @@ local rules =
 							and inBounds(i,j,1,9,6,10) then return true end
 					end
 				end
-			end,
-			["moves"]	= {{2,2},{-2,2},{2,-2},{-2,-2}},
-			["threats"]	= {{2,2},{-2,2},{2,-2},{-2,-2}},
-			["blocks"]	= {{1,1},{-1,1},{1,-1},{-1,-1}},
-			["confines"]= {1, 9, 6, 10} --red side before river
-		}
+			end
 	}
 }
 
 rules.B = {
-	K = {
-		["canMove"]	= function(p,i,j)
-			local validMovement = false
-				for k = -1, 1, 2 do
-					if (p.row + k == i and p.column == j or
-						p.row == i and p.column + k == j) then
-						validMovement = inBounds(i,j,4,6,1,3)
-					end
+	K = function(p,i,j)
+			for k = -1, 1, 2 do
+				if (p.row + k == i and p.column == j or
+					p.row == i and p.column + k == j) then
+					return inBounds(i,j,4,6,1,3)
 				end
-				--[[local inBetweenPieceExists = false
-				if validMovement and p.board.kingPositions.R[1] == i then
-					for l = p.column + 1, p.board.kingPositions.R[2] - 1, 1 do
-						if p.board.layout[i][l].type then return p.board.layout[i][l].type end
-					end
-					return false
-				end]]
-				return validMovement
+			end
 		end,
-		["moves"]	= {{1,0},{-1,0},{0,1},{0,-1}},
-		["threats"]	= {{1,0},{-1,0},{0,1},{0,-1},{0,"K"}},
-		["blocks"]	= nil,
-		["confines"]= {4, 6, 1, 3} --black palace
-	},
-	R = {
-		["canMove"]	= rules.R.R.canMove,
-		["moves"]	= {{"R",0},{0,"R"}},
-		["threats"] = {{"R",0},{0,"R"}},
-		["blocks"]	= nil,
-		["confines"]= nil
-	},
-	H = {
-		["canMove"] = rules.R.H.canMove,
-		["threats"] = {{2,1},{-2,1},{2,-1},{-2,-1},{1,2},{-1,2},{1,-2},{-1,-2}},
-		["blocks"]	= {{1,0},{-1,0},{1,0}, {-1,0}, {0,1},{0,1}, {0,-1},{0,-1}},
-		["confines"]= nil
-	},
-   	C = {
-   		["canMove"]	= rules.R.C.canMove,
-   		["moves"]	= {{"R",0},{0,"R"}},
-   		["threats"]	= {{"C",0},{0,"C"}},
-   		["blocks"]	= nil,
-   		["confines"]= nil
-   	},
-   	P = {
-  		["canMove"]	= function(p,i,j)
+	R = rules.R.R,
+	H = rules.R.H,
+   	C = rules.R.C,
+   	P = function(p,i,j)
 			if p.row == i and p.column + 1 == j then return true 
 			elseif inBounds(i,j, 1, 9, 6, 10) then
 				return p.row - 1 == i and p.column == j or p.row + 1 == i and p.column == j
 			end
 		end,
-   		["moves"]	= {{0,1}},
-   		["threats"]	= {{0,1}},
-   		["blocks"]	= nil,
-   		["confines"]= nil
-   	},
-   	A = {
-   		["canMove"] = function(p,i,j)
+   	A = function(p,i,j)
 			for k = -1, 1, 2 do
 				for l = -1, 1, 2 do
 					if (p.row + k == i and p.column + l == j)
@@ -220,13 +132,7 @@ rules.B = {
 				end
 			end
 		end,
-   		["moves"]	= {{1,1},{1,-1},{-1,1},{-1,-1}},
-   		["threats"]	= {{1,1},{1,-1},{-1,1},{-1,-1}},
-   		["blocks"]	= nil,
-  		["confines"]= {4, 6, 1, 3} --black palace
-    },
-	E = {
-		["canMove"] = function(p,i,j)
+	E = function(p,i,j)
 			for k = -2, 2, 4 do
 				for l = -2, 2, 4 do
 					if (p.row + k == i and p.column + l == j)
@@ -234,12 +140,7 @@ rules.B = {
 						and inBounds(i,j,1,9,1,5) then return true end
 				end
 			end
-		end,
-		["moves"]	= {{2,2},{-2,2},{2,-2},{-2,-2}},
-		["threats"]	= {{2,2},{-2,2},{2,-2},{-2,-2}},
-		["blocks"]	= {{1,1},{-1,1},{1,-1},{-1,-1}},
-		["confines"]= {1, 9, 1, 5} --black side before river
-	}
+		end
 }
 
 function newPiece(board,color,type,i,j)
@@ -300,7 +201,7 @@ function newPiece(board,color,type,i,j)
 	
 	function p:generateRules(color,type)
 		function self:canTypeMove(i,j)
-			return rules[color or self.color][type or self.type].canMove(self,i,j)
+			return rules[color or self.color][type or self.type](self,i,j)
 		end
 	end
 	
