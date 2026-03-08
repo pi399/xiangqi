@@ -6,16 +6,14 @@ function Spring(springiness,damping,position)
 	s.p = position
 	s.t = position
 	function s:tick(dt)
-		if math.abs(self.p - self.t) > 0.001 then
-			local deceleration = dt * self.damping * self.velocity
-			if math.abs(self.velocity) > math.abs(deceleration) then
-				self.velocity = self.velocity - deceleration
-			else
-				self.velocity = 0
-			end
-			self.velocity = self.velocity + dt * self.spr * (self.t - self.p)
-			self.p = self.p + dt * self.velocity
+		local deceleration = dt * self.damping * self.velocity
+		if math.abs(self.velocity) > math.abs(deceleration) then
+			self.velocity = self.velocity - deceleration
+		else
+			self.velocity = 0
 		end
+		self.velocity = self.velocity + dt * self.spr * (self.t - self.p)
+		self.p = self.p + dt * self.velocity
 	end
 	
 	function s:reset(x,y)

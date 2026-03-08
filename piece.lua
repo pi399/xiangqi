@@ -16,6 +16,8 @@ if true then
 	end
 end
 
+local click = love.audio.newSource("resources/audio/click.mp3", "static")
+
 local emptySpace = { type = false, character = false }
 local function inBounds(x,y,low_x,high_x,low_y,high_y)
 	return x >= (low_x or 1) and x <= (high_x or 9) and y >= (low_y or 1) and y <= (high_y or 10)
@@ -136,7 +138,7 @@ rules.B = {
 			for k = -2, 2, 4 do
 				for l = -2, 2, 4 do
 					if (p.row + k == i and p.column + l == j)
-						and not p.board.layout[p.row + k/2][p.column + l/2].type
+						and not p.board.layout[p.row + (k/2)][p.column + l/2].type
 						and inBounds(i,j,1,9,1,5) then return true end
 				end
 			end
@@ -149,18 +151,16 @@ function newPiece(board,color,type,i,j)
 
 	p.type			= type
 	p.color			= color
-	p.bodyColors	= {1,1,1}
-	p.textColors	= {color=="R" and 1 or 0,0,0}
 	p.board			= board
 	p.size			= 20
 	p.row			= i
 	p.column		= j
 	p.x,  p.y		= board:getCoordinates(i,j)
-	p.xspr, p.yspr  = Spring(500,20,p.x), Spring(500,20,p.y)
+	p.xspr, p.yspr  = Spring(500,20,p.x), Spring(500,20,p.y + (p.color == "R" and 1 or -1) * math.random(1000))
 	
 	function p:draw()
 		love.graphics.setColor(1,1,1)
-		love.graphics.draw(image,pieceImages[self.color][self.type], self.x, self.y, -self.board.theta)
+		love.graphics.draw(image,pieceImages[self.color][self.type], self.x, self.y)
 	end
 
 	function p:move(i,j)
@@ -168,6 +168,7 @@ function newPiece(board,color,type,i,j)
 		if self:canMove(i,j) then
 			self.board.layout[self.row][self.column] = emptySpace
 			local save, save_row, save_column = self.board.layout[i][j], self.row, self.column
+			
 			self.row = i
 			self.column = j
 			self.board.layout[i][j] = self
@@ -180,6 +181,7 @@ function newPiece(board,color,type,i,j)
 			local pieceInBetween = false
 			if kingsFacing then
 				for l = self.board.kingPositions.B[2] + 1, self.board.kingPositions.R[2] - 1, 1 do
+					print(self.board.layout[self.board.kingPositions.B[1]][l].type)
 					pieceInBetween = pieceInBetween or self.board.layout[self.board.kingPositions.B[1]][l].type
 				end
 			end
@@ -194,7 +196,9 @@ function newPiece(board,color,type,i,j)
 				end
 				return false
 			end
-			return true
+			
+			click:play()
+			return true, save
 		end
 		return false
 	end

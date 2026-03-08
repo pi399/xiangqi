@@ -10,6 +10,8 @@ local function round(x,y)
 	return x,y
 end
 
+local function ord(i) return string.char(string.byte("a")+i-1) end
+
 local mousePressed = false
 local flipped = false
 
@@ -61,9 +63,9 @@ function Board()
         	end
         end
         
-        --draw selected piece last
-		if self.activePiece.type then self.activePiece:draw() end
         love.graphics.pop()
+       	--draw selected piece last
+		if self.activePiece.type then self.activePiece:draw() end
 	end
 	
 	function b:update(dt)
@@ -101,13 +103,14 @@ function Board()
 		mousePressed = false
 		if self.activePiece.type then
 			local i, j = self:nearestPosition(x,y)
-			if self.activePiece:move(i,j) then
+			local success, takenPiece = self.activePiece:move(i,j)
+			if success then
+				print(self.layout[i][j].type..(takenPiece.type and "x" or "")..ord(i)..j)
 				self.moveColor = self.moveColor == "R" and "B" or "R"
-				--self:reverse()
 			end
 		end
 	end
-	
+		
 	function b:center()
 		local w,h		= love.graphics.getDimensions()
 		self.x, self.y	= w/2 - ( self.width + self.b * 2 ) / 2, h/2 - ( self.height + self.b * 2 ) / 2

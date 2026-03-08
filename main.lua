@@ -3,19 +3,22 @@ require("piece")
 require("layout")
 require("starfield")
 require("spring")
+--local moonshine = require 'resources/shaders/moonshine'
 
-local bgm = love.audio.newSource("resources/audio/tendas.mp3", "stream") bgm:setVolume(0.6) bgm:setLooping(false)
+local bgm = love.audio.newSource("resources/audio/tendas.mp3", "stream") bgm:setVolume(1) bgm:setLooping(false)
 local nebula = love.graphics.newImage("resources/textures/photo/milky_way.jpg")
-local audioOn = true
+--local crt = moonshine(moonshine.effects.crt)
 
 local stars = Starfield(2000)
 local black,red = {0.2,0.2,0.34}, {0.34,0.2,0.2}
-local B
+
 local inCheck = false
+local B
 
 function love.load()
 	love.graphics.setPointSize(2)
 	B = Board()
+	--crt.x, crt.y = B.x, B.y
 	bgm:play()
 end
 
@@ -40,7 +43,7 @@ function love.update(dt)
 	B.x = B.x + 0.05 * math.sin(timer / 2)
 	stars:update(dt)
 	B:update(dt)
-	if audioOn and not bgm:isPlaying() then
+	if not bgm:isPlaying() then
 		bgm:seek(17.454)
 		bgm:play()
 	end
@@ -50,12 +53,7 @@ function love.keypressed(key)
 	if key == 'r' then
 		B:loadLayout()
 	elseif key == 'm' then
-		audioOn = not audioOn
-		if bgm:isPlaying() then
-			bgm:stop()
-		else
-			bgm:play()
-		end
+		bgm:setVolume(0)
 	elseif key == 'y' then
 		B.x, B.y = love.mouse.getPosition()
 	end
