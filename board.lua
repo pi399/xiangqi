@@ -1,5 +1,4 @@
 require("piece")
-require("spring")
 
 local emptySpace = { type = false, character = false }
 local function round(x,y)
@@ -10,9 +9,13 @@ local function round(x,y)
 	return x,y
 end
 
+--	board used to be drawn darker with color {0.8, 0.8, 0.5}
+local rainbow = love.graphics.newShader("resources/shaders/rainbow.fs")
+
 local function ord(i) return string.char(string.byte("a")+i-1) end
 
 local mousePressed = false
+local timer = 0
 local flipped = false
 
 function Board()
@@ -21,15 +24,12 @@ function Board()
 	
 	local w, h = love.graphics.getDimensions()
 	
-	b.mainColors	= {0,0,0}
-	b.bgColors		= {0.8,0.8,0.5}
+	b.scale			= 0.8
 	b.baseDim		= 60
-	b.sqDim			= 60
-	b.b				= 80
-	b.width			= b.sqDim * 8
-	b.height		= b.sqDim * 9
-	b.x				= w/2 - ( b.width + b.b * 2 ) / 2
-	b.y				= h/2 - ( b.height + b.b * 2 ) / 2
+	b.sqDim			= b.baseDim * b.scale
+	b.b				= b.baseDim * b.scale * 4 / 3
+	b.x				= w/2 - ( b.sqDim * 8 + b.b * 2 ) / 2
+	b.y				= h/2 - ( b.sqDim * 9 + b.b * 2 ) / 2
 	b.theta			= 0
 	
 	b.kingPositions = {R = {5, 10}, B = {5, 1}}
@@ -44,16 +44,9 @@ function Board()
 	b:createBoardImage()
 	
 	function b:draw()
-		--rotate depending on theta
 		love.graphics.push()
-		love.graphics.translate(self.x,self.y)
 		love.graphics.rotate(self.theta)
-		love.graphics.translate(-self.x,-self.y)
-		
-		--draw board
-		love.graphics.setColor(self.bgColors)
-		love.graphics.draw(self.image,self.x,self.y)
-		
+		love.graphics.draw(self.image,self.x,self.y,0,self.scale,self.scale)
 		--draw pieces, except for the selected piece
 		for j,row in ipairs(self.layout) do
         	for i,piece in ipairs(row) do
@@ -62,15 +55,27 @@ function Board()
         		end
         	end
         end
-        
         love.graphics.pop()
+        
        	--draw selected piece last
-		if self.activePiece.type then self.activePiece:draw() end
+		if self.activePiece.type then
+			love.graphics.setShader(rainbow)
+			self.activePiece:draw()
+			love.graphics.setShader()
+		end
+	end
+	
+	function b:rescale(sc)
+		sc = sc or self.scale
+		local w,h			= love.graphics.getDimensions()
+		self.sqDim			= self.baseDim * sc
+		self.b				= self.baseDim * sc * 1.33333334
+		self.x				= w/2 - ( self.sqDim * 8 + self.b * 2 ) / 2
+		self.y				= h/2 - ( self.sqDim * 9 + self.b * 2 ) / 2
+		self.scale			= sc
 	end
 	
 	function b:update(dt)
-		local dt = dt or love.timer.step()
-	
 		for j,row in ipairs(self.layout) do
         	for i,piece in ipairs(row) do
         		if piece.type and piece ~= self.activePiece then
@@ -78,14 +83,17 @@ function Board()
         		end
         	end
         end
-        
+       	
 		if self.activePiece.type then
 			if mousePressed then
 				local x, y = love.mouse.getPosition()
-				self.activePiece.xspr.t, self.activePiece.yspr.t = x - 30, y - 30
+				self.activePiece.t.x, self.activePiece.t.y = x - self.sqDim / 2, y - self.sqDim / 2
 			end
 			self.activePiece:update(dt, false)
 		end
+		
+		timer = timer + dt
+       	rainbow:send("time",timer)
 	end
 	
 	function b:mousePressed(x,y,button)
@@ -94,8 +102,7 @@ function Board()
 		if self.moveColor == self.layout[i][j].color then
 			self.activePiece = self.layout[i][j]
 			local o, p = self:getCoordinates(i,j)
-			self.activePiece.xspr:reset(x - 30, o)
-			self.activePiece.yspr:reset(y - 30, p)
+			self.activePiece:reset(x - self.sqDim / 2, y - self.sqDim / 2, o, p)
 		end
 	end
 	
@@ -106,6 +113,7 @@ function Board()
 			local success, takenPiece = self.activePiece:move(i,j)
 			if success then
 				print(self.layout[i][j].type..(takenPiece.type and "x" or "")..ord(i)..j)
+				self:reverse()
 				self.moveColor = self.moveColor == "R" and "B" or "R"
 			end
 		end
@@ -113,17 +121,18 @@ function Board()
 		
 	function b:center()
 		local w,h		= love.graphics.getDimensions()
-		self.x, self.y	= w/2 - ( self.width + self.b * 2 ) / 2, h/2 - ( self.height + self.b * 2 ) / 2
+		self.x, self.y	= w/2 - ( self.sqDim * 8 + self.b * 2 ) / 2, h/2 - ( self.sqDim * 9 + self.b * 2 ) / 2
+		self:rescale(h / 800)
 	end
 	
 	function b:getCoordinates(i,j)
-		return	self.b + self.x + (flipped and self.width or 0) + (flipped and -1 or 1) * (i - 1) * self.sqDim - 29,
-				self.b + self.y + (flipped and self.height or 0) + (flipped and -1 or 1) * (j - 1) * self.sqDim - 29
+		return	self.b + self.x + (flipped and self.sqDim * 8 or 0) + (flipped and -1 or 1) * (i - 1) * self.sqDim - self.sqDim / 2,
+				self.b + self.y + (flipped and self.sqDim * 9 or 0) + (flipped and -1 or 1) * (j - 1) * self.sqDim - self.sqDim / 2
 	end
 	
 	function b:nearestPosition(x, y)
-		local i = (flipped and 10 or 0) + (flipped and -1 or 1) * math.floor((x - (self.x + self.b) + 87) / self.sqDim)
-		local j = (flipped and 11 or 0) + (flipped and -1 or 1) * math.floor((y - (self.y + self.b) + 87) / self.sqDim)
+		local i = (flipped and 10 or 0) + (flipped and -1 or 1) * math.ceil((x - (self.x + self.b) + self.sqDim / 2) / self.sqDim)
+		local j = (flipped and 11 or 0) + (flipped and -1 or 1) * math.ceil((y - (self.y + self.b) + self.sqDim / 2) / self.sqDim)
 		return round(i,j)
 	end
 	
@@ -159,7 +168,7 @@ function Board()
 		
 		for j,i in pairs(starting_layout) do
     		for k,v in pairs(i) do
-    			self.layout[k][j] = newPiece(self, starting_layout[j][k][1], starting_layout[j][k][2], k, j)
+    			self.layout[k][j] = Piece(self, starting_layout[j][k][1], starting_layout[j][k][2], k, j)
 			end
     	end
     	

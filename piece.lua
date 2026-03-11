@@ -1,4 +1,4 @@
-require("spring")
+require("2dspring")
 
 local pieceImages = {B = {}, R = {}}
 local image = love.graphics.newImage("resources/textures/2x/pieces.png")
@@ -24,7 +24,7 @@ local function inBounds(x,y,low_x,high_x,low_y,high_y)
 end
 
 local horseMoves = {{2,1},{-2,1},{2,-1},{-2,-1},{1,2},{-1,2},{1,-2},{-1,-2}}
-local horseBlocks= {{1,0},{-1,0},{1,0}, {-1,0}, {0,1},{0,1}, {0,-1},{0,-1}}
+local horseBlocks= {{1,0},{-1,0},{1,0},{-1,0},{0,1},{0,1},{0,-1},{0,-1}}
 
 local rules =
 {
@@ -145,22 +145,21 @@ rules.B = {
 		end
 }
 
-function newPiece(board,color,type,i,j)
+function Piece(board,color,type,i,j)
 	
 	local p = {}
-
+	
 	p.type			= type
 	p.color			= color
 	p.board			= board
-	p.size			= 20
 	p.row			= i
 	p.column		= j
-	p.x,  p.y		= board:getCoordinates(i,j)
-	p.xspr, p.yspr  = Spring(500,20,p.x), Spring(500,20,p.y + (p.color == "R" and 1 or -1) * math.random(1000))
+	local x, y		= board:getCoordinates(i,j)
+	local meta = {__index = Spring(500, 20, x, (p.color == "R" and 1 or -1) * math.random(1000))}
+	setmetatable(p,meta)
 	
 	function p:draw()
-		love.graphics.setColor(1,1,1)
-		love.graphics.draw(image,pieceImages[self.color][self.type], self.x, self.y)
+		love.graphics.draw(image,pieceImages[self.color][self.type], self.p.x, self.p.y, 0, self.board.scale, self.board.scale)
 	end
 
 	function p:move(i,j)
@@ -181,7 +180,6 @@ function newPiece(board,color,type,i,j)
 			local pieceInBetween = false
 			if kingsFacing then
 				for l = self.board.kingPositions.B[2] + 1, self.board.kingPositions.R[2] - 1, 1 do
-					print(self.board.layout[self.board.kingPositions.B[1]][l].type)
 					pieceInBetween = pieceInBetween or self.board.layout[self.board.kingPositions.B[1]][l].type
 				end
 			end
@@ -219,11 +217,10 @@ function newPiece(board,color,type,i,j)
 	function p:update(dt,snapped)
 		local dt = dt or love.timer.step()
 		if snapped then
-			self.xspr.t, self.yspr.t = board:getCoordinates(self.row, self.column)
+			self.t.x, self.t.y = board:getCoordinates(self.row, self.column)
 		end
-		self.xspr:tick(dt) self.yspr:tick(dt)
-		self.x, self.y = self.xspr.p, self.yspr.p
-	end	
+		self:tick(dt)
+	end
 	
 	return p
 end
