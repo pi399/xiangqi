@@ -1,4 +1,5 @@
 local nebula = love.graphics.newImage("resources/textures/photo/milky_way.jpg")
+local nw,nh = nebula:getDimensions()
 function Starfield(num)
 	local c = {}
 	local math = math
@@ -42,12 +43,13 @@ function Starfield(num)
 	c:generateStars()
 	
 	function c:draw()
-		love.graphics.draw(nebula,0,0)
+		local h = self.fg:getHeight()
+		local w,wh = love.graphics.getDimensions()
+		love.graphics.draw(nebula,0,0,0,w/nw,wh/nh)
 		love.graphics.setColor(1,1,1)
 		love.graphics.draw(self.bg,0,self.by)
 		love.graphics.draw(self.mg,0,self.my)
 		love.graphics.draw(self.fg,0,self.fy)
-		local h = self.fg:getHeight()
 		love.graphics.draw(self.bg,0,self.by - h)
 		love.graphics.draw(self.mg,0,self.my - h)
 		love.graphics.draw(self.fg,0,self.fy - h)
@@ -87,6 +89,6 @@ function Starfield(num)
 			self:generateStars(dh,0,ph,pw,dh)
 		end
 	end
-	
+
 	return c
 end

@@ -13,12 +13,16 @@ local tendas = love.audio.newSource("resources/audio/tendas.mp3", "stream") tend
 local nevermeant = love.audio.newSource("resources/audio/ineverdidmeanit.mp3", "stream")
 local bgm = tendas
 
-local startupSound = love.audio.newSource("resources/audio/good music.mp3", "static")
-
 local UI = {
 	xiangqiPlay = Button:new(100, 500, "play xiangqi"),
 	blankPlay = Button:new(320, 500, "blank pieces"),
-	quit = Button:new(540, 500, "quit")
+	quit = Button:new(540, 500, "quit"),
+	switchTracks = Button:new(320, 400, "switch track",
+		function()
+			bgm:stop()
+			bgm = bgm == tendas and nevermeant or tendas
+			bgm:play()
+		end)
 }
 
 function love.load()
@@ -50,22 +54,19 @@ function love.update(dt)
 		B.x = B.x + 0.05 * math.sin(timer / 2)
 		B:update(dt)
 	end
-	if not bgm:isPlaying() and not startupSound:isPlaying() then bgm:seek(17.5) bgm:play() end
+	if not bgm:isPlaying() then bgm:seek(17.5) bgm:play() end
 end
 
 function love.keypressed(key)
 	if key == 'r' and B then
 		B:loadLayout()
 	elseif key == 'm' then
-		love.audio.setVolume(love.audio.getVolume() == 1 and 0 or 1)
+		bgm:setVolume(bgm:getVolume() == 1 and 0 or 1)
 	elseif key == 'q' then
 		for k,v in pairs(UI) do
 			v.visible = true
 		end
 		B = nil
-	elseif key == 'b' then
-		bgm:stop()
-		bgm = bgm == tendas and nevermeant or tendas
 	end
 end
 
@@ -88,8 +89,6 @@ function love.mousereleased(x, y, button)
 				v.visible = false
 			end
 			B = value
-			startupSound:play()
-			bgm:pause()
 		end
 	end
 end
