@@ -9,7 +9,10 @@ local black,red = {0.8,0.8,0.9},{0.96,0.8,0.8}
 local inCheck = false
 local B
 
-local bgm = love.audio.newSource("resources/audio/tendas.mp3", "stream") bgm:setLooping(false)
+local tendas = love.audio.newSource("resources/audio/tendas.mp3", "stream") tendas:setLooping(false)
+local nevermeant = love.audio.newSource("resources/audio/ineverdidmeanit.mp3", "stream")
+local bgm = tendas
+
 local startupSound = love.audio.newSource("resources/audio/good music.mp3", "static")
 
 local UI = {
@@ -35,6 +38,8 @@ function love.draw()
 		love.graphics.print((B.moveColor == "R" and "Red" or "Black") .. " is in check!", 40, love.graphics.getHeight() / 2)
 	end
 	for k,v in pairs(UI) do v:draw() end
+	love.graphics.setColor(1,1,1)
+	love.graphics.print(love.timer.getFPS(),10,10)
 end
 
 function love.update(dt)
@@ -52,12 +57,15 @@ function love.keypressed(key)
 	if key == 'r' and B then
 		B:loadLayout()
 	elseif key == 'm' then
-		bgm:setVolume(bgm:getVolume() == 1 and 0 or 1)
+		love.audio.setVolume(love.audio.getVolume() == 1 and 0 or 1)
 	elseif key == 'q' then
 		for k,v in pairs(UI) do
 			v.visible = true
 		end
 		B = nil
+	elseif key == 'b' then
+		bgm:stop()
+		bgm = bgm == tendas and nevermeant or tendas
 	end
 end
 
